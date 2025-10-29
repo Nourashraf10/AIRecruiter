@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Vacancy Approval</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Fira Sans', 'Droid Sans', 'Helvetica Neue', Arial, sans-serif; background:#f6f8fa; margin:0; }
+    .container { max-width: 680px; margin: 40px auto; background:#fff; border:1px solid #e5e7eb; border-radius:12px; box-shadow: 0 8px 24px rgba(149,157,165,.2); overflow:hidden; }
+    .header { background: linear-gradient(90deg, #007cba, #00a0d2); color:#fff; padding:24px; }
+    .header h1 { margin:0; font-size:20px; }
+    .content { padding:24px; color:#111827; }
+    .actions { display:flex; gap:12px; margin-top:20px; }
+    .btn { padding:12px 18px; border-radius:8px; text-decoration:none; border:none; cursor:pointer; font-weight:600; }
+    .btn-approve { background:#16a34a; color:#fff; }
+    .btn-approve:hover { background:#15803d; }
+    .btn-reject { background:#ef4444; color:#fff; }
+    .btn-reject:hover { background:#dc2626; }
+    .note { font-size:13px; color:#6b7280; margin-top:12px; }
+    .error { background:#fee2e2; color:#991b1b; border:1px solid #fecaca; padding:12px; border-radius:8px; margin-bottom:12px; }
+  </style>
+  <script>
+    async function act(action) {
+      const form = document.getElementById('approval-form');
+      const btnApprove = document.getElementById('btn-approve');
+      const btnReject = document.getElementById('btn-reject');
+      btnApprove.disabled = true; btnReject.disabled = true;
+      form.action.value = action;
+      form.submit();
+    }
+  </script>
+  </head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>Vacancy Approval</h1>
+    </div>
+    <div class="content">
+      {% if error %}
+        <div class="error">{{ error }}</div>
+      {% endif %}
+      <p>Please approve or reject this vacancy request.</p>
+      <form id="approval-form" method="post">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="" />
+        <div class="actions">
+          <button id="btn-approve" type="button" class="btn btn-approve" onclick="act('approve')">Approve</button>
+          <button id="btn-reject" type="button" class="btn btn-reject" onclick="act('reject')">Reject</button>
+        </div>
+        <div class="note">Token: {{ approval_token }}</div>
+      </form>
+    </div>
+  </div>
+</body>
+</html>
+
+

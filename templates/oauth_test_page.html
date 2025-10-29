@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OAuth Test Page</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .status-card {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .status-card h3 {
+            margin-top: 0;
+            color: #495057;
+        }
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .stat-item {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 6px;
+            text-align: center;
+        }
+        .stat-number {
+            font-size: 24px;
+            font-weight: bold;
+            color: #1976d2;
+        }
+        .stat-label {
+            color: #666;
+            font-size: 14px;
+        }
+        .test-section {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .test-section h3 {
+            margin-top: 0;
+            color: #856404;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #333;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        .btn {
+            background: #007cba;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-right: 10px;
+        }
+        .btn:hover {
+            background: #005a87;
+        }
+        .btn-success {
+            background: #28a745;
+        }
+        .btn-success:hover {
+            background: #1e7e34;
+        }
+        .result {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 4px;
+            display: none;
+        }
+        .result.success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .result.error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        .result.info {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+        }
+        .links {
+            text-align: center;
+            margin-top: 30px;
+        }
+        .links a {
+            color: #007cba;
+            text-decoration: none;
+            margin: 0 15px;
+            font-weight: bold;
+        }
+        .links a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔐 OAuth & Calendar Integration Test Page</h1>
+        
+        <!-- System Status -->
+        <div class="status-card">
+            <h3>📊 System Status</h3>
+            <div class="status-grid">
+                <div class="stat-item">
+                    <div class="stat-number">{{ integrations_count }}</div>
+                    <div class="stat-label">Calendar Integrations</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">{{ interviews_count }}</div>
+                    <div class="stat-label">Scheduled Interviews</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">{{ vacancies_count }}</div>
+                    <div class="stat-label">Active Vacancies</div>
+                </div>
+            </div>
+            
+            <div style="margin-top: 15px;">
+                <strong>OAuth Configuration:</strong>
+                {% if oauth_configured %}
+                    <span style="color: green;">✅ Configured (Client ID: {{ client_id }})</span>
+                {% else %}
+                    <span style="color: red;">❌ Not Configured</span>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- OAuth Testing -->
+        <div class="test-section">
+            <h3>🧪 OAuth Testing</h3>
+            
+            <div class="form-group">
+                <label for="manager_email">Manager Email:</label>
+                <input type="email" id="manager_email" placeholder="manager@company.com" value="noureldin.ashraf@bit68.com">
+            </div>
+            
+            <button class="btn btn-success" onclick="testOAuthSetup()">Test OAuth Setup</button>
+            <button class="btn" onclick="testOAuthStatus()">Check OAuth Status</button>
+            
+            <div id="result" class="result"></div>
+        </div>
+        
+        <!-- Quick Links -->
+        <div class="links">
+            <a href="/admin/">Django Admin</a>
+            <a href="/admin/oauth/dashboard/">OAuth Dashboard (Admin)</a>
+            <a href="/admin/interviews/calendarintegration/">Calendar Integrations</a>
+            <a href="/admin/interviews/interview/">Interviews</a>
+        </div>
+    </div>
+
+    <script>
+        function showResult(message, type) {
+            const resultDiv = document.getElementById('result');
+            resultDiv.className = 'result ' + type;
+            resultDiv.innerHTML = message;
+            resultDiv.style.display = 'block';
+        }
+
+        function testOAuthSetup() {
+            const managerEmail = document.getElementById('manager_email').value;
+            
+            if (!managerEmail) {
+                showResult('Please enter a manager email', 'error');
+                return;
+            }
+            
+            showResult('Testing OAuth setup...', 'info');
+            
+            fetch('/test/oauth/setup/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({manager_email: managerEmail})
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showResult(`✅ OAuth setup completed: ${data.message}`, 'success');
+                } else if (data.requires_authorization) {
+                    showResult(`🔐 OAuth setup initiated!<br><br>Please visit this URL to authorize:<br><a href="${data.authorization_url}" target="_blank">${data.authorization_url}</a>`, 'info');
+                } else {
+                    showResult(`❌ OAuth setup failed: ${data.error}`, 'error');
+                }
+            })
+            .catch(error => {
+                showResult(`❌ Error: ${error}`, 'error');
+            });
+        }
+
+        function testOAuthStatus() {
+            const managerEmail = document.getElementById('manager_email').value;
+            
+            if (!managerEmail) {
+                showResult('Please enter a manager email', 'error');
+                return;
+            }
+            
+            showResult('Checking OAuth status...', 'info');
+            
+            fetch(`/test/oauth/status/?manager_email=${encodeURIComponent(managerEmail)}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const status = data.has_valid_token ? '✅ Valid Token' : '❌ Invalid/No Token';
+                    showResult(`OAuth Status for ${data.manager_email}: ${status}`, data.has_valid_token ? 'success' : 'error');
+                } else {
+                    showResult(`❌ Status check failed: ${data.error}`, 'error');
+                }
+            })
+            .catch(error => {
+                showResult(`❌ Error: ${error}`, 'error');
+            });
+        }
+    </script>
+</body>
+</html>

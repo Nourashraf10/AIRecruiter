@@ -1,0 +1,116 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static %}
+
+{% block extrahead %}
+{{ block.super }}
+<style>
+.oauth-dashboard-link {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 20px;
+    border-radius: 10px;
+    text-decoration: none;
+    display: block;
+    margin: 20px 0;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s ease;
+}
+
+.oauth-dashboard-link:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+    color: white;
+    text-decoration: none;
+}
+
+.oauth-dashboard-link h3 {
+    margin: 0 0 10px 0;
+    font-size: 24px;
+}
+
+.oauth-dashboard-link p {
+    margin: 0;
+    opacity: 0.9;
+}
+
+.quick-actions {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 15px;
+    margin: 20px 0;
+}
+
+.quick-action-card {
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 20px;
+    text-align: center;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    transition: transform 0.2s ease;
+}
+
+.quick-action-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+.quick-action-card h4 {
+    margin: 0 0 10px 0;
+    color: #333;
+}
+
+.quick-action-card a {
+    color: #007cba;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.quick-action-card a:hover {
+    color: #005a87;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+{{ block.super }}
+
+<!-- OAuth Dashboard Link -->
+<a href="/admin/oauth-dashboard/" class="oauth-dashboard-link">
+    <h3>🔐 OAuth & Calendar Integration Dashboard</h3>
+    <p>Test OAuth setup, calendar availability, and interview scheduling for managers</p>
+</a>
+
+<!-- Quick Actions -->
+<div class="quick-actions">
+    <div class="quick-action-card">
+        <h4>📋 Vacancies</h4>
+        <a href="{% url 'admin:vacancies_vacancy_changelist' %}">Manage Vacancies</a>
+    </div>
+    
+    <div class="quick-action-card">
+        <h4>👥 Candidates</h4>
+        <a href="{% url 'admin:candidates_candidate_changelist' %}">View Candidates</a>
+    </div>
+    
+    <div class="quick-action-card">
+        <h4>📄 Applications</h4>
+        <a href="{% url 'admin:candidates_application_changelist' %}">View Applications</a>
+    </div>
+    
+    <div class="quick-action-card">
+        <h4>🎯 Interviews</h4>
+        <a href="{% url 'admin:interviews_interview_changelist' %}">View Scheduled Interviews</a>
+    </div>
+    
+    <div class="quick-action-card">
+        <h4>📅 Interview Slots</h4>
+        <a href="{% url 'admin:interviews_interviewslot_changelist' %}">Manage Interview Slots</a>
+    </div>
+    
+    <div class="quick-action-card">
+        <h4>📝 Shortlists</h4>
+        <a href="{% url 'admin:vacancies_shortlist_changelist' %}">Manage Shortlists</a>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,132 @@
+{% extends "admin/base_site.html" %}
+{% load i18n admin_urls static admin_modify %}
+
+{% block title %}{{ title }} | {{ site_title|default:_('Django site admin') }}{% endblock %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+<a href="{% url 'admin:index' %}">{% trans 'Home' %}</a>
+&rsaquo; <a href="{% url 'admin:candidates_candidate_changelist' %}">{% trans 'Candidates' %}</a>
+&rsaquo; {% trans 'Upload CV' %}
+</div>
+{% endblock %}
+
+{% block content %}
+<h1>{% trans 'Upload CV' %}</h1>
+
+<div class="module aligned">
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        
+        <fieldset class="module aligned">
+            <h2>{% trans 'CV Upload Details' %}</h2>
+            
+            <div class="form-row">
+                <div>
+                    <label for="{{ form.cv_file.id_for_label }}" class="required">{{ form.cv_file.label }}:</label>
+                    {{ form.cv_file }}
+                    {% if form.cv_file.help_text %}
+                        <p class="help">{{ form.cv_file.help_text }}</p>
+                    {% endif %}
+                    {% if form.cv_file.errors %}
+                        <ul class="errorlist">
+                            {% for error in form.cv_file.errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div>
+                    <label for="{{ form.vacancy.id_for_label }}" class="required">{{ form.vacancy.label }}:</label>
+                    {{ form.vacancy }}
+                    {% if form.vacancy.help_text %}
+                        <p class="help">{{ form.vacancy.help_text }}</p>
+                    {% endif %}
+                    {% if form.vacancy.errors %}
+                        <ul class="errorlist">
+                            {% for error in form.vacancy.errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div>
+                    <label for="{{ form.candidate_name.id_for_label }}" class="required">{{ form.candidate_name.label }}:</label>
+                    {{ form.candidate_name }}
+                    {% if form.candidate_name.help_text %}
+                        <p class="help">{{ form.candidate_name.help_text }}</p>
+                    {% endif %}
+                    {% if form.candidate_name.errors %}
+                        <ul class="errorlist">
+                            {% for error in form.candidate_name.errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div>
+                    <label for="{{ form.candidate_email.id_for_label }}" class="required">{{ form.candidate_email.label }}:</label>
+                    {{ form.candidate_email }}
+                    {% if form.candidate_email.help_text %}
+                        <p class="help">{{ form.candidate_email.help_text }}</p>
+                    {% endif %}
+                    {% if form.candidate_email.errors %}
+                        <ul class="errorlist">
+                            {% for error in form.candidate_email.errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div>
+                    <label for="{{ form.candidate_phone.id_for_label }}">{{ form.candidate_phone.label }}:</label>
+                    {{ form.candidate_phone }}
+                    {% if form.candidate_phone.help_text %}
+                        <p class="help">{{ form.candidate_phone.help_text }}</p>
+                    {% endif %}
+                    {% if form.candidate_phone.errors %}
+                        <ul class="errorlist">
+                            {% for error in form.candidate_phone.errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                </div>
+            </div>
+        </fieldset>
+        
+        <div class="submit-row">
+            <input type="submit" value="{% trans 'Upload CV' %}" class="default" name="_save">
+            <a href="{% url 'admin:candidates_candidate_changelist' %}" class="button cancel-link">{% trans 'Cancel' %}</a>
+        </div>
+    </form>
+</div>
+
+<div class="module">
+    <h2>{% trans 'Instructions' %}</h2>
+    <div class="form-row">
+        <p>This form will:</p>
+        <ul>
+            <li>Upload and process the CV file using AI</li>
+            <li>Extract candidate information automatically</li>
+            <li>Create a new candidate record (or update existing)</li>
+            <li>Create an application for the selected vacancy</li>
+            <li>Score the candidate against vacancy requirements using AI</li>
+            <li>Store all extracted data and analysis results</li>
+        </ul>
+        <p><strong>Supported file types:</strong> PDF, DOC, DOCX, TXT</p>
+    </div>
+</div>
+{% endblock %}

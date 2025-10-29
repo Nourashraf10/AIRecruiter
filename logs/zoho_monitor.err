@@ -1,0 +1,834 @@
+2025-09-24 14:00:41,721 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-24 14:00:42,626 - INFO - 🚀 Starting Zoho Mail monitoring every 5 minutes
+2025-09-24 14:00:42,626 - INFO - 📧 Monitoring: fahmy@bit68.com
+2025-09-24 14:00:42,626 - INFO - 🔗 Django API: https://5ba70aac21c1.ngrok-free.app/api/inbound/email/
+2025-09-24 14:00:44,510 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-24 14:00:45,534 - INFO - Found 1 unread 'Open Vacancy' emails
+2025-09-24 14:00:45,986 - INFO - Processing email from: Nour Sereg <noursereg21202@gmail.com>
+2025-09-24 14:00:45,986 - INFO - Subject: Open Vacancy
+2025-09-24 14:00:49,507 - INFO - ✅ Email sent to Django API successfully
+2025-09-24 14:00:49,753 - INFO - ✅ Marked email b'12' as read
+2025-09-24 14:00:49,753 - INFO - ✅ Successfully processed email from Nour Sereg <noursereg21202@gmail.com>
+2025-09-24 14:00:49,753 - INFO - Processed 1 new vacancy emails
+2025-09-24 14:00:50,717 - INFO - 📬 Processed 1 new emails
+2025-09-24 14:05:52,633 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-24 14:05:54,050 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-24 14:05:54,051 - INFO - Processed 0 new vacancy emails
+2025-09-24 14:17:23,826 - ERROR - ❌ Failed to connect to Zoho Mail: command: SELECT => socket error: EOF
+2025-09-24 14:22:25,903 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-24 14:22:26,684 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-24 14:22:26,684 - INFO - Processed 0 new vacancy emails
+2025-09-24 14:27:29,618 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-24 14:27:30,952 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-24 14:27:30,953 - INFO - Processed 0 new vacancy emails
+2025-09-24 14:32:33,980 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-24 14:32:35,013 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-24 14:32:35,014 - INFO - Processed 0 new vacancy emails
+2025-09-24 14:37:37,351 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-24 14:37:37,817 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-24 14:37:37,817 - INFO - Processed 0 new vacancy emails
+2025-09-24 14:42:40,250 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-24 14:42:41,246 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-24 14:42:41,246 - INFO - Processed 0 new vacancy emails
+2025-09-24 14:47:44,305 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-24 14:47:45,316 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-24 14:47:45,316 - INFO - Processed 0 new vacancy emails
+2025-09-24 14:52:47,822 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-24 14:52:48,986 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-24 14:52:48,986 - INFO - Processed 0 new vacancy emails
+2025-09-24 14:57:52,074 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-24 14:57:53,060 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-24 14:57:53,061 - INFO - Processed 0 new vacancy emails
+2025-09-24 15:02:56,114 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-24 15:02:56,938 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-24 15:02:56,938 - INFO - Processed 0 new vacancy emails
+2025-09-24 15:07:59,356 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-24 15:08:00,369 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-24 15:08:00,369 - INFO - Processed 0 new vacancy emails
+2025-09-24 15:13:03,642 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-24 15:13:04,351 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-24 15:13:04,352 - INFO - Processed 0 new vacancy emails
+2025-09-24 15:18:07,454 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-24 15:18:08,847 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-24 15:18:08,848 - INFO - Processed 0 new vacancy emails
+2025-09-24 15:23:12,515 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-24 15:23:13,587 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-24 15:23:13,587 - INFO - Processed 0 new vacancy emails
+2025-09-24 15:28:17,525 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-24 15:28:19,048 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-24 15:28:19,048 - INFO - Processed 0 new vacancy emails
+2025-09-24 15:34:20,662 - ERROR - ❌ Failed to connect to Zoho Mail: command: SELECT => socket error: EOF
+2025-09-24 15:39:22,737 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-24 15:39:23,966 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-24 15:39:23,967 - INFO - Processed 0 new vacancy emails
+2025-09-24 15:44:26,700 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-24 15:44:27,714 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-24 15:44:27,714 - INFO - Processed 0 new vacancy emails
+2025-09-24 15:52:24,432 - ERROR - ❌ Failed to connect to Zoho Mail: [Errno 8] nodename nor servname provided, or not known
+2025-09-24 17:23:02,076 - ERROR - ❌ Failed to connect to Zoho Mail: command: CAPABILITY => socket error: EOF
+2025-09-24 17:28:05,055 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-24 17:28:07,066 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-24 17:28:07,066 - INFO - Processed 0 new vacancy emails
+2025-09-24 17:50:04,588 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-24 17:50:07,126 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-24 17:50:07,126 - INFO - Processed 0 new vacancy emails
+2025-09-24 17:55:11,749 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-24 17:55:14,059 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-24 17:55:14,060 - INFO - Processed 0 new vacancy emails
+2025-09-24 18:00:17,926 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-24 18:00:19,848 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-24 18:00:19,849 - INFO - Processed 0 new vacancy emails
+2025-09-24 18:34:00,324 - ERROR - ❌ Failed to connect to Zoho Mail: [Errno 8] nodename nor servname provided, or not known
+2025-09-24 19:12:37,911 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-24 19:12:38,992 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-24 19:12:38,993 - INFO - Processed 0 new vacancy emails
+2025-09-24 19:17:42,199 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-24 19:17:43,112 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-24 19:17:43,112 - INFO - Processed 0 new vacancy emails
+2025-09-24 19:22:46,309 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-24 19:22:48,748 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-24 19:22:48,748 - INFO - Processed 0 new vacancy emails
+2025-09-24 19:27:52,923 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-24 19:27:54,092 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-24 19:27:54,093 - INFO - Processed 0 new vacancy emails
+2025-09-24 19:51:04,327 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-24 19:51:06,093 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-24 19:51:06,094 - INFO - Processed 0 new vacancy emails
+2025-09-24 20:11:05,689 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-24 20:11:07,341 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-24 20:11:07,342 - INFO - Processed 0 new vacancy emails
+2025-09-24 20:16:17,632 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-24 20:16:19,091 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-24 20:16:19,098 - INFO - Processed 0 new vacancy emails
+2025-09-24 20:21:23,192 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-24 20:21:24,480 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-24 20:21:24,480 - INFO - Processed 0 new vacancy emails
+2025-09-24 20:26:28,679 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-24 20:26:30,493 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-24 20:26:30,494 - INFO - Processed 0 new vacancy emails
+2025-09-24 20:31:34,048 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-24 20:31:35,646 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-24 20:31:35,649 - INFO - Processed 0 new vacancy emails
+2025-09-24 20:36:39,505 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-24 20:36:41,052 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-24 20:36:41,052 - INFO - Processed 0 new vacancy emails
+2025-09-24 20:41:44,891 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-24 20:41:46,313 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-24 20:41:46,313 - INFO - Processed 0 new vacancy emails
+2025-09-24 20:46:50,566 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-24 20:46:51,634 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-24 20:46:51,634 - INFO - Processed 0 new vacancy emails
+2025-09-24 20:51:56,428 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-24 20:51:57,849 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-24 20:51:57,849 - INFO - Processed 0 new vacancy emails
+2025-09-24 20:57:01,863 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-24 20:57:03,183 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-24 20:57:03,184 - INFO - Processed 0 new vacancy emails
+2025-09-24 21:02:07,403 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-24 21:02:08,941 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-24 21:02:08,941 - INFO - Processed 0 new vacancy emails
+2025-09-24 21:07:12,637 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-24 21:07:14,134 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-24 21:07:14,134 - INFO - Processed 0 new vacancy emails
+2025-09-24 21:12:17,785 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-24 21:12:19,066 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-24 21:12:19,067 - INFO - Processed 0 new vacancy emails
+2025-09-24 21:17:22,497 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-24 21:17:24,154 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-24 21:17:24,154 - INFO - Processed 0 new vacancy emails
+2025-09-24 21:22:28,006 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-24 21:22:29,020 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-24 21:22:29,020 - INFO - Processed 0 new vacancy emails
+2025-09-24 21:27:32,173 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-24 21:27:33,051 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-24 21:27:33,051 - INFO - Processed 0 new vacancy emails
+2025-09-24 21:32:36,237 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-24 21:32:37,752 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-24 21:32:37,758 - INFO - Processed 0 new vacancy emails
+2025-09-24 21:37:41,361 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-24 21:37:42,851 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-24 21:37:42,854 - INFO - Processed 0 new vacancy emails
+2025-09-24 21:42:45,894 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-24 21:42:47,141 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-24 21:42:47,173 - INFO - Processed 0 new vacancy emails
+2025-09-24 21:47:49,976 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-24 21:47:51,496 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-24 21:47:51,496 - INFO - Processed 0 new vacancy emails
+2025-09-24 21:52:54,763 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-24 21:52:55,868 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-24 21:52:55,868 - INFO - Processed 0 new vacancy emails
+2025-09-24 21:57:59,518 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-24 21:58:00,605 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-24 21:58:00,606 - INFO - Processed 0 new vacancy emails
+2025-09-24 22:03:04,157 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-24 22:03:05,968 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-24 22:03:05,969 - INFO - Processed 0 new vacancy emails
+2025-09-24 22:08:10,404 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-24 22:08:11,598 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-24 22:08:11,600 - INFO - Processed 0 new vacancy emails
+2025-09-24 22:13:14,862 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-24 22:13:15,890 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-24 22:13:15,890 - INFO - Processed 0 new vacancy emails
+2025-09-25 01:16:14,788 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-25 01:16:15,454 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-25 01:16:15,454 - INFO - Processed 0 new vacancy emails
+2025-09-25 03:34:48,105 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-25 03:34:48,540 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-25 03:34:48,540 - INFO - Processed 0 new vacancy emails
+2025-09-25 03:39:50,656 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-25 03:39:51,280 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-25 03:39:51,281 - INFO - Processed 0 new vacancy emails
+2025-09-25 03:44:53,800 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-25 03:44:54,413 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-25 03:44:54,414 - INFO - Processed 0 new vacancy emails
+2025-09-25 03:49:56,998 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-25 03:49:57,555 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-25 03:49:57,556 - INFO - Processed 0 new vacancy emails
+2025-09-25 03:55:06,423 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-25 03:55:07,080 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-25 03:55:07,080 - INFO - Processed 0 new vacancy emails
+2025-09-25 04:13:01,089 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-25 04:13:01,929 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-25 04:13:01,929 - INFO - Processed 0 new vacancy emails
+2025-09-25 04:18:04,279 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-25 04:18:05,107 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-25 04:18:05,107 - INFO - Processed 0 new vacancy emails
+2025-09-25 04:23:07,770 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-25 04:23:08,474 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-25 04:23:08,474 - INFO - Processed 0 new vacancy emails
+2025-09-25 04:40:57,757 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-25 04:40:58,581 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-25 04:40:58,582 - INFO - Processed 0 new vacancy emails
+2025-09-25 05:26:32,904 - ERROR - ❌ Failed to connect to Zoho Mail: [Errno 60] Operation timed out
+2025-09-25 05:31:34,646 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-25 05:31:35,554 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-25 05:31:35,554 - INFO - Processed 0 new vacancy emails
+2025-09-25 05:36:38,572 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-25 05:36:39,276 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-25 05:36:39,277 - INFO - Processed 0 new vacancy emails
+2025-09-25 05:57:23,944 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-25 05:57:25,013 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-25 05:57:25,013 - INFO - Processed 0 new vacancy emails
+2025-09-25 06:35:39,450 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-25 06:35:40,369 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-25 06:35:40,369 - INFO - Processed 0 new vacancy emails
+2025-09-25 06:40:43,965 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-25 06:40:45,052 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-25 06:40:45,052 - INFO - Processed 0 new vacancy emails
+2025-09-25 06:45:47,878 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-25 06:45:48,776 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-25 06:45:48,777 - INFO - Processed 0 new vacancy emails
+2025-09-25 07:23:03,545 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-25 07:23:04,409 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-25 07:23:04,409 - INFO - Processed 0 new vacancy emails
+2025-09-25 07:28:07,570 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-25 07:28:09,303 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-25 07:28:09,304 - INFO - Processed 0 new vacancy emails
+2025-09-25 07:33:12,720 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-25 07:33:13,646 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-25 07:33:13,646 - INFO - Processed 0 new vacancy emails
+2025-09-25 08:23:55,807 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-25 08:23:57,102 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-25 08:23:57,103 - INFO - Processed 0 new vacancy emails
+2025-09-25 08:29:00,418 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-25 08:29:01,715 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-25 08:29:01,716 - INFO - Processed 0 new vacancy emails
+2025-09-25 08:34:04,889 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-25 08:34:07,083 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-25 08:34:07,084 - INFO - Processed 0 new vacancy emails
+2025-09-25 08:54:08,955 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-25 08:54:10,930 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-25 08:54:10,930 - INFO - Processed 0 new vacancy emails
+2025-09-25 09:30:13,817 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-25 09:30:15,165 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-25 09:30:15,165 - INFO - Processed 0 new vacancy emails
+2025-09-25 09:35:18,512 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-25 09:35:19,817 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-25 09:35:19,818 - INFO - Processed 0 new vacancy emails
+2025-09-25 09:40:23,072 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-25 09:40:23,903 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-25 09:40:23,903 - INFO - Processed 0 new vacancy emails
+2025-09-25 10:35:10,507 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-25 10:35:12,125 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-25 10:35:12,125 - INFO - Processed 0 new vacancy emails
+2025-09-25 10:40:15,904 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-25 10:40:17,094 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-25 10:40:17,094 - INFO - Processed 0 new vacancy emails
+2025-09-25 10:45:20,473 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-25 10:45:21,879 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-25 10:45:21,879 - INFO - Processed 0 new vacancy emails
+2025-09-25 11:21:05,944 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-25 11:21:07,579 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-25 11:21:07,580 - INFO - Processed 0 new vacancy emails
+2025-09-25 11:26:11,161 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-25 11:26:12,905 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-25 11:26:12,906 - INFO - Processed 0 new vacancy emails
+2025-09-25 11:31:16,548 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-25 11:31:18,368 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-25 11:31:18,369 - INFO - Processed 0 new vacancy emails
+2025-09-25 11:46:06,774 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-25 11:46:10,106 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-25 11:46:10,106 - INFO - Processed 0 new vacancy emails
+2025-09-25 12:06:48,674 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-25 12:06:50,387 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-25 12:06:50,388 - INFO - Processed 0 new vacancy emails
+2025-09-25 12:13:49,882 - ERROR - ❌ Failed to connect to Zoho Mail: b'* BYE IMAP4rev1 Server logging out'
+2025-09-25 12:18:52,097 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-25 12:18:53,245 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-25 12:18:53,245 - INFO - Processed 0 new vacancy emails
+2025-09-25 12:40:52,320 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-25 12:40:53,369 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-25 12:40:53,369 - INFO - Processed 0 new vacancy emails
+2025-09-25 12:45:56,276 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-25 12:45:57,459 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-25 12:45:57,459 - INFO - Processed 0 new vacancy emails
+2025-09-25 12:51:00,842 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-25 12:51:01,886 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-25 12:51:01,886 - INFO - Processed 0 new vacancy emails
+2025-09-25 13:11:14,493 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-25 13:11:16,468 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-25 13:11:16,468 - INFO - Processed 0 new vacancy emails
+2025-09-25 13:16:20,680 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-25 13:16:21,995 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-25 13:16:21,995 - INFO - Processed 0 new vacancy emails
+2025-09-25 13:21:25,326 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-25 13:21:26,841 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-25 13:21:26,842 - INFO - Processed 0 new vacancy emails
+2025-09-25 13:43:29,068 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-25 13:43:29,960 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-25 13:43:29,961 - INFO - Processed 0 new vacancy emails
+2025-09-25 14:01:54,101 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-25 14:01:55,692 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-25 14:01:55,692 - INFO - Processed 0 new vacancy emails
+2025-09-25 14:07:10,118 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-25 14:07:11,261 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-25 14:07:11,262 - INFO - Processed 0 new vacancy emails
+2025-09-25 14:12:14,837 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-25 14:12:16,767 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-25 14:12:16,767 - INFO - Processed 0 new vacancy emails
+2025-09-25 14:17:20,407 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-25 14:17:21,708 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-25 14:17:21,708 - INFO - Processed 0 new vacancy emails
+2025-09-25 15:12:22,305 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-25 15:12:23,304 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-25 15:12:23,304 - INFO - Processed 0 new vacancy emails
+2025-09-25 15:17:26,816 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-25 15:17:27,938 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-25 15:17:27,939 - INFO - Processed 0 new vacancy emails
+2025-09-25 15:22:31,875 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-25 15:22:32,958 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-25 15:22:32,958 - INFO - Processed 0 new vacancy emails
+2025-09-25 15:42:52,519 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-25 15:42:53,976 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-25 15:42:53,976 - INFO - Processed 0 new vacancy emails
+2025-09-25 16:19:19,116 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-25 16:19:20,527 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-25 16:19:20,527 - INFO - Processed 0 new vacancy emails
+2025-09-25 16:24:24,101 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-25 16:24:25,233 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-25 16:24:25,233 - INFO - Processed 0 new vacancy emails
+2025-09-25 16:29:28,772 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-25 16:29:30,268 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-25 16:29:30,268 - INFO - Processed 0 new vacancy emails
+2025-09-25 17:09:59,028 - ERROR - ❌ Failed to connect to Zoho Mail: [Errno 8] nodename nor servname provided, or not known
+2025-09-25 17:15:01,188 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-25 17:15:01,898 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-25 17:15:01,898 - INFO - Processed 0 new vacancy emails
+2025-09-25 17:20:04,879 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-25 17:20:06,428 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-25 17:20:06,428 - INFO - Processed 0 new vacancy emails
+2025-09-25 17:25:58,954 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-25 17:25:59,763 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-25 17:25:59,764 - INFO - Processed 0 new vacancy emails
+2025-09-25 17:31:02,771 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-25 17:31:04,648 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-25 17:31:04,648 - INFO - Processed 0 new vacancy emails
+2025-09-25 17:36:07,849 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-25 17:36:08,827 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-25 17:36:08,828 - INFO - Processed 0 new vacancy emails
+2025-09-25 17:41:14,445 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-25 17:41:14,968 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-25 17:41:14,968 - INFO - Processed 0 new vacancy emails
+2025-09-25 17:55:42,704 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-25 17:55:43,352 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-25 17:55:43,352 - INFO - Processed 0 new vacancy emails
+2025-09-25 18:16:11,414 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-25 18:16:12,764 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-25 18:16:12,765 - INFO - Processed 0 new vacancy emails
+2025-09-25 18:43:26,634 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-25 18:43:27,404 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-25 18:43:27,405 - INFO - Processed 0 new vacancy emails
+2025-09-25 19:03:27,010 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-25 19:03:28,249 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-25 19:03:28,250 - INFO - Processed 0 new vacancy emails
+2025-09-25 19:13:29,901 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-25 19:13:30,805 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-25 19:13:30,805 - INFO - Processed 0 new vacancy emails
+2025-09-25 19:18:33,438 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-25 19:18:34,410 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-25 19:18:34,410 - INFO - Processed 0 new vacancy emails
+2025-09-25 19:23:37,257 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-25 19:23:38,468 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-25 19:23:38,471 - INFO - Processed 0 new vacancy emails
+2025-09-25 19:28:41,349 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-25 19:28:43,496 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-25 19:28:43,496 - INFO - Processed 0 new vacancy emails
+2025-09-25 19:58:57,428 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-25 19:58:58,487 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-25 19:58:58,487 - INFO - Processed 0 new vacancy emails
+2025-09-25 20:13:57,902 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-25 20:13:58,835 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-25 20:13:58,836 - INFO - Processed 0 new vacancy emails
+2025-09-25 20:19:02,058 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-25 20:19:03,434 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-25 20:19:03,434 - INFO - Processed 0 new vacancy emails
+2025-09-25 20:24:05,865 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-25 20:24:06,380 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-25 20:24:06,381 - INFO - Processed 0 new vacancy emails
+2025-09-25 21:07:42,329 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-25 21:07:43,465 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-25 21:07:43,465 - INFO - Processed 0 new vacancy emails
+2025-09-25 21:12:46,867 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-25 21:12:48,102 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-25 21:12:48,103 - INFO - Processed 0 new vacancy emails
+2025-09-25 21:17:51,136 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-25 21:17:51,833 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-25 21:17:51,833 - INFO - Processed 0 new vacancy emails
+2025-09-25 21:30:08,936 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-25 21:30:10,591 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-25 21:30:10,591 - INFO - Processed 0 new vacancy emails
+2025-09-25 21:42:10,965 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-25 21:42:11,748 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-25 21:42:11,748 - INFO - Processed 0 new vacancy emails
+2025-09-25 21:47:14,712 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-25 21:47:15,419 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-25 21:47:15,419 - INFO - Processed 0 new vacancy emails
+2025-09-25 21:52:17,584 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-25 21:52:18,266 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-25 21:52:18,267 - INFO - Processed 0 new vacancy emails
+2025-09-25 22:13:45,896 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-25 22:13:46,751 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-25 22:13:46,752 - INFO - Processed 0 new vacancy emails
+2025-09-25 22:18:49,177 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-25 22:18:49,874 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-25 22:18:49,874 - INFO - Processed 0 new vacancy emails
+2025-09-25 22:53:09,675 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-25 22:53:12,107 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-25 22:53:12,108 - INFO - Processed 0 new vacancy emails
+2025-09-25 23:07:56,621 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-25 23:07:57,517 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-25 23:07:57,517 - INFO - Processed 0 new vacancy emails
+2025-09-25 23:18:45,411 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-25 23:18:45,802 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-25 23:18:45,802 - INFO - Processed 0 new vacancy emails
+2025-09-25 23:41:43,774 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-25 23:41:44,563 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-25 23:41:44,564 - INFO - Processed 0 new vacancy emails
+2025-09-26 00:05:13,699 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-26 00:05:14,617 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-26 00:05:14,617 - INFO - Processed 0 new vacancy emails
+2025-09-26 00:10:18,329 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-26 00:10:18,780 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-26 00:10:18,780 - INFO - Processed 0 new vacancy emails
+2025-09-26 00:15:20,809 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-26 00:15:21,445 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-26 00:15:21,445 - INFO - Processed 0 new vacancy emails
+2025-09-26 00:45:16,481 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-26 00:45:16,852 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-26 00:45:16,852 - INFO - Processed 0 new vacancy emails
+2025-09-26 00:53:59,475 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-26 00:54:00,022 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-26 00:54:00,022 - INFO - Processed 0 new vacancy emails
+2025-09-26 00:59:02,201 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-26 00:59:02,602 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-26 00:59:02,603 - INFO - Processed 0 new vacancy emails
+2025-09-26 01:04:04,787 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-26 01:04:05,247 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-26 01:04:05,248 - INFO - Processed 0 new vacancy emails
+2025-09-26 01:58:06,529 - ERROR - ❌ Failed to connect to Zoho Mail: [Errno 8] nodename nor servname provided, or not known
+2025-09-26 02:03:36,531 - ERROR - ❌ Failed to connect to Zoho Mail: [Errno 8] nodename nor servname provided, or not known
+2025-09-26 02:09:06,552 - ERROR - ❌ Failed to connect to Zoho Mail: [Errno 8] nodename nor servname provided, or not known
+2025-09-26 02:14:36,563 - ERROR - ❌ Failed to connect to Zoho Mail: [Errno 8] nodename nor servname provided, or not known
+2025-09-26 02:19:38,558 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-26 02:19:39,175 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-26 02:19:39,175 - INFO - Processed 0 new vacancy emails
+2025-09-26 02:24:41,746 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-26 02:24:42,390 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-26 02:24:42,390 - INFO - Processed 0 new vacancy emails
+2025-09-26 02:29:44,845 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-26 02:29:45,407 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-26 02:29:45,408 - INFO - Processed 0 new vacancy emails
+2025-09-26 02:46:34,408 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-26 02:46:35,216 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-26 02:46:35,217 - INFO - Processed 0 new vacancy emails
+2025-09-26 02:56:36,916 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-26 02:56:37,487 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-26 02:56:37,488 - INFO - Processed 0 new vacancy emails
+2025-09-26 03:01:39,900 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-26 03:01:40,966 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-26 03:01:40,967 - INFO - Processed 0 new vacancy emails
+2025-09-26 03:06:43,712 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-26 03:06:44,186 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-26 03:06:44,187 - INFO - Processed 0 new vacancy emails
+2025-09-26 03:12:25,015 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-26 03:12:25,695 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-26 03:12:25,695 - INFO - Processed 0 new vacancy emails
+2025-09-26 03:17:27,729 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-26 03:17:28,176 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-26 03:17:28,177 - INFO - Processed 0 new vacancy emails
+2025-09-26 03:22:30,906 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-26 03:22:31,480 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-26 03:22:31,480 - INFO - Processed 0 new vacancy emails
+2025-09-26 03:27:34,160 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-26 03:27:34,705 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-26 03:27:34,706 - INFO - Processed 0 new vacancy emails
+2025-09-26 03:32:37,105 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-26 03:32:38,004 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-26 03:32:38,005 - INFO - Processed 0 new vacancy emails
+2025-09-26 03:46:22,167 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-26 03:46:22,926 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-26 03:46:22,927 - INFO - Processed 0 new vacancy emails
+2025-09-26 03:59:17,763 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-26 03:59:18,500 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-26 03:59:18,500 - INFO - Processed 0 new vacancy emails
+2025-09-26 04:32:04,194 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-26 04:32:05,269 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-26 04:32:05,270 - INFO - Processed 0 new vacancy emails
+2025-09-26 04:49:45,990 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-26 04:49:46,856 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-26 04:49:46,857 - INFO - Processed 0 new vacancy emails
+2025-09-26 04:54:49,283 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-26 04:54:49,837 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-26 04:54:49,838 - INFO - Processed 0 new vacancy emails
+2025-09-26 04:59:52,146 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-26 04:59:52,636 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-26 04:59:52,636 - INFO - Processed 0 new vacancy emails
+2025-09-26 05:15:40,684 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-26 05:15:41,227 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-26 05:15:41,228 - INFO - Processed 0 new vacancy emails
+2025-09-26 05:39:52,048 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-26 05:39:53,025 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-26 05:39:53,025 - INFO - Processed 0 new vacancy emails
+2025-09-26 05:49:53,592 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-26 05:49:54,108 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-26 05:49:54,108 - INFO - Processed 0 new vacancy emails
+2025-09-26 05:54:56,623 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-26 05:54:57,302 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-26 05:54:57,303 - INFO - Processed 0 new vacancy emails
+2025-09-26 06:00:00,137 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-26 06:00:00,940 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-26 06:00:00,941 - INFO - Processed 0 new vacancy emails
+2025-09-26 06:34:52,926 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-26 06:34:53,432 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-26 06:34:53,432 - INFO - Processed 0 new vacancy emails
+2025-09-26 06:40:02,298 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-26 06:40:03,020 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-26 06:40:03,020 - INFO - Processed 0 new vacancy emails
+2025-09-26 06:45:06,278 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-26 06:45:07,535 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-26 06:45:07,536 - INFO - Processed 0 new vacancy emails
+2025-09-26 07:21:56,025 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-26 07:21:56,975 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-26 07:21:56,975 - INFO - Processed 0 new vacancy emails
+2025-09-26 07:27:00,000 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-26 07:27:01,631 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-26 07:27:01,631 - INFO - Processed 0 new vacancy emails
+2025-09-26 07:32:04,929 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-26 07:32:05,798 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-26 07:32:05,798 - INFO - Processed 0 new vacancy emails
+2025-09-26 07:37:08,921 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-26 07:37:10,133 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-26 07:37:10,133 - INFO - Processed 0 new vacancy emails
+2025-09-26 07:42:13,388 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-26 07:42:14,192 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-26 07:42:14,192 - INFO - Processed 0 new vacancy emails
+2025-09-26 08:02:10,159 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-26 08:02:11,370 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-26 08:02:11,371 - INFO - Processed 0 new vacancy emails
+2025-09-26 08:32:05,325 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-26 08:32:07,052 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-26 08:32:07,053 - INFO - Processed 0 new vacancy emails
+2025-09-26 08:37:11,102 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-26 08:37:12,446 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-26 08:37:12,446 - INFO - Processed 0 new vacancy emails
+2025-09-26 08:42:15,334 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-26 08:42:16,020 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-26 08:42:16,021 - INFO - Processed 0 new vacancy emails
+2025-09-26 09:04:27,318 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-26 09:04:28,662 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-26 09:04:28,662 - INFO - Processed 0 new vacancy emails
+2025-09-26 09:24:27,234 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-26 09:24:28,190 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-26 09:24:28,190 - INFO - Processed 0 new vacancy emails
+2025-09-26 09:29:31,526 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-26 09:29:32,988 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-26 09:29:32,988 - INFO - Processed 0 new vacancy emails
+2025-09-26 09:34:36,861 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-26 09:34:38,041 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-26 09:34:38,041 - INFO - Processed 0 new vacancy emails
+2025-09-26 10:11:44,842 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-26 10:11:46,102 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-26 10:11:46,102 - INFO - Processed 0 new vacancy emails
+2025-09-26 10:21:48,264 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-26 10:21:49,066 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-26 10:21:49,066 - INFO - Processed 0 new vacancy emails
+2025-09-26 10:26:52,662 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-26 10:26:53,635 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-26 10:26:53,635 - INFO - Processed 0 new vacancy emails
+2025-09-26 10:31:57,176 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-26 10:31:58,223 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-26 10:31:58,223 - INFO - Processed 0 new vacancy emails
+2025-09-26 11:25:11,086 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-26 11:25:12,371 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-26 11:25:12,371 - INFO - Processed 0 new vacancy emails
+2025-09-26 11:30:16,368 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-26 11:30:17,286 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-26 11:30:17,287 - INFO - Processed 0 new vacancy emails
+2025-09-26 11:35:20,707 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-26 11:35:21,981 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-26 11:35:21,982 - INFO - Processed 0 new vacancy emails
+2025-09-26 12:29:14,368 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-26 12:29:15,113 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-26 12:29:15,113 - INFO - Processed 0 new vacancy emails
+2025-09-26 12:34:18,576 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-26 12:34:19,855 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-26 12:34:19,855 - INFO - Processed 0 new vacancy emails
+2025-09-26 12:40:45,353 - ERROR - ❌ Failed to connect to Zoho Mail: command: LOGIN => socket error: EOF
+2025-09-26 13:18:30,134 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-26 13:18:31,314 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-26 13:18:31,314 - INFO - Processed 0 new vacancy emails
+2025-09-26 13:23:35,554 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-26 13:23:36,506 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-26 13:23:36,506 - INFO - Processed 0 new vacancy emails
+2025-09-26 13:28:39,439 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-26 13:28:40,362 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-26 13:28:40,362 - INFO - Processed 0 new vacancy emails
+2025-09-26 13:49:15,988 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-26 13:49:16,275 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-26 13:49:16,276 - INFO - Processed 0 new vacancy emails
+2025-09-26 13:54:18,097 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-26 13:54:18,329 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-26 13:54:18,330 - INFO - Processed 0 new vacancy emails
+2025-09-26 13:59:20,046 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-26 13:59:20,376 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-26 13:59:20,376 - INFO - Processed 0 new vacancy emails
+2025-09-26 14:10:24,316 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-26 14:10:24,649 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-26 14:10:24,649 - INFO - Processed 0 new vacancy emails
+2025-09-26 14:32:10,020 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-26 14:32:10,258 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-26 14:32:10,259 - INFO - Processed 0 new vacancy emails
+2025-09-26 14:37:12,154 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-26 14:37:12,451 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-26 14:37:12,452 - INFO - Processed 0 new vacancy emails
+2025-09-26 14:42:14,301 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-26 14:42:14,558 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-26 14:42:14,559 - INFO - Processed 0 new vacancy emails
+2025-09-26 15:17:42,399 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-26 15:17:42,752 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-26 15:17:42,752 - INFO - Processed 0 new vacancy emails
+2025-09-26 15:22:44,924 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-26 15:22:45,317 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-26 15:22:45,317 - INFO - Processed 0 new vacancy emails
+2025-09-26 15:27:48,234 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-26 15:27:49,108 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-26 15:27:49,109 - INFO - Processed 0 new vacancy emails
+2025-09-26 15:47:24,010 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-26 15:47:24,320 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-26 15:47:24,320 - INFO - Processed 0 new vacancy emails
+2025-09-26 16:19:00,428 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-26 16:19:00,744 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-26 16:19:00,745 - INFO - Processed 0 new vacancy emails
+2025-09-26 16:24:02,721 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-26 16:24:03,655 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-26 16:24:03,655 - INFO - Processed 0 new vacancy emails
+2025-09-26 16:29:05,871 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-26 16:29:06,303 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-26 16:29:06,304 - INFO - Processed 0 new vacancy emails
+2025-09-26 16:35:11,320 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-26 16:35:11,724 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-26 16:35:11,724 - INFO - Processed 0 new vacancy emails
+2025-09-26 17:00:04,188 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-26 17:00:04,441 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-26 17:00:04,441 - INFO - Processed 0 new vacancy emails
+2025-09-26 17:10:05,737 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-26 17:10:06,061 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-26 17:10:06,061 - INFO - Processed 0 new vacancy emails
+2025-09-26 17:15:07,917 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-26 17:15:08,207 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-26 17:15:08,207 - INFO - Processed 0 new vacancy emails
+2025-09-26 17:43:03,473 - ERROR - ❌ Failed to connect to Zoho Mail: [Errno 60] Operation timed out
+2025-09-26 18:05:57,322 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-26 18:05:57,569 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-26 18:05:57,569 - INFO - Processed 0 new vacancy emails
+2025-09-26 18:10:59,246 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-26 18:10:59,486 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-26 18:10:59,486 - INFO - Processed 0 new vacancy emails
+2025-09-26 18:16:01,489 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-26 18:16:01,859 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-26 18:16:01,859 - INFO - Processed 0 new vacancy emails
+2025-09-26 18:51:05,614 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-26 18:51:05,856 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-26 18:51:05,856 - INFO - Processed 0 new vacancy emails
+2025-09-26 18:56:07,619 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-26 18:56:07,857 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-26 18:56:07,858 - INFO - Processed 0 new vacancy emails
+2025-09-26 19:01:09,636 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-26 19:01:10,013 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-26 19:01:10,013 - INFO - Processed 0 new vacancy emails
+2025-09-26 19:21:43,531 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-26 19:21:43,787 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-26 19:21:43,787 - INFO - Processed 0 new vacancy emails
+2025-09-26 19:26:45,629 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-26 19:26:45,870 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-26 19:26:45,871 - INFO - Processed 0 new vacancy emails
+2025-09-26 19:31:47,551 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-26 19:31:47,903 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-26 19:31:47,904 - INFO - Processed 0 new vacancy emails
+2025-09-26 19:40:00,783 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-26 19:40:01,063 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-26 19:40:01,063 - INFO - Processed 0 new vacancy emails
+2025-09-26 19:54:26,845 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-26 19:54:27,074 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-26 19:54:27,075 - INFO - Processed 0 new vacancy emails
+2025-09-26 19:59:28,784 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-26 19:59:29,079 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-26 19:59:29,079 - INFO - Processed 0 new vacancy emails
+2025-09-26 20:04:31,263 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-26 20:04:31,571 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-26 20:04:31,571 - INFO - Processed 0 new vacancy emails
+2025-09-26 20:50:37,679 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-26 20:50:37,918 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-26 20:50:37,918 - INFO - Processed 0 new vacancy emails
+2025-09-26 20:55:39,699 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-26 20:55:40,047 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-26 20:55:40,047 - INFO - Processed 0 new vacancy emails
+2025-09-26 21:05:29,480 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-26 21:05:29,751 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-26 21:05:29,752 - INFO - Processed 0 new vacancy emails
+2025-09-26 21:21:22,524 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-26 21:21:22,796 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-26 21:21:22,801 - INFO - Processed 0 new vacancy emails
+2025-09-26 21:41:13,273 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-26 21:41:13,513 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-26 21:41:13,513 - INFO - Processed 0 new vacancy emails
+2025-09-26 21:46:15,188 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-26 21:46:15,436 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-26 21:46:15,436 - INFO - Processed 0 new vacancy emails
+2025-09-26 21:51:17,158 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-26 21:51:17,430 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-26 21:51:17,430 - INFO - Processed 0 new vacancy emails
+2025-09-26 21:56:19,097 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-26 21:56:19,401 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-26 21:56:19,403 - INFO - Processed 0 new vacancy emails
+2025-09-26 22:01:21,047 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-26 22:01:21,274 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-26 22:01:21,274 - INFO - Processed 0 new vacancy emails
+2025-09-26 22:21:31,689 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-26 22:21:32,001 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-26 22:21:32,002 - INFO - Processed 0 new vacancy emails
+2025-09-26 22:59:07,894 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-26 22:59:08,223 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-26 22:59:08,224 - INFO - Processed 0 new vacancy emails
+2025-09-26 23:04:10,793 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-26 23:04:11,118 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-26 23:04:11,119 - INFO - Processed 0 new vacancy emails
+2025-09-26 23:09:13,019 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-26 23:09:13,250 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-26 23:09:13,250 - INFO - Processed 0 new vacancy emails
+2025-09-26 23:20:26,289 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-26 23:20:26,519 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-26 23:20:26,519 - INFO - Processed 0 new vacancy emails
+2025-09-26 23:50:46,835 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-26 23:50:47,161 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-26 23:50:47,161 - INFO - Processed 0 new vacancy emails
+2025-09-26 23:55:49,733 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-26 23:55:50,063 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-26 23:55:50,063 - INFO - Processed 0 new vacancy emails
+2025-09-27 00:00:52,030 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-27 00:00:52,266 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-27 00:00:52,266 - INFO - Processed 0 new vacancy emails
+2025-09-27 00:23:11,007 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-27 00:23:11,316 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-27 00:23:11,316 - INFO - Processed 0 new vacancy emails
+2025-09-27 01:06:32,291 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-27 01:06:32,527 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-27 01:06:32,527 - INFO - Processed 0 new vacancy emails
+2025-09-27 01:11:34,330 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-27 01:11:34,557 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-27 01:11:34,558 - INFO - Processed 0 new vacancy emails
+2025-09-27 01:16:36,303 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-27 01:16:36,548 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-27 01:16:36,548 - INFO - Processed 0 new vacancy emails
+2025-09-27 01:42:14,992 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-27 01:42:15,244 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-27 01:42:15,245 - INFO - Processed 0 new vacancy emails
+2025-09-27 01:52:29,959 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-27 01:52:30,203 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-27 01:52:30,204 - INFO - Processed 0 new vacancy emails
+2025-09-27 01:57:31,980 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-27 01:57:32,212 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-27 01:57:32,212 - INFO - Processed 0 new vacancy emails
+2025-09-27 02:02:33,997 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-27 02:02:34,301 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-27 02:02:34,302 - INFO - Processed 0 new vacancy emails
+2025-09-27 02:07:36,663 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-27 02:07:36,962 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-27 02:07:36,962 - INFO - Processed 0 new vacancy emails
+2025-09-27 02:12:38,844 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-27 02:12:39,078 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-27 02:12:39,079 - INFO - Processed 0 new vacancy emails
+2025-09-27 02:17:41,456 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-27 02:17:41,722 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-27 02:17:41,723 - INFO - Processed 0 new vacancy emails
+2025-09-27 02:22:43,857 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-27 02:22:44,177 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-27 02:22:44,177 - INFO - Processed 0 new vacancy emails
+2025-09-27 02:27:46,097 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-27 02:27:46,538 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-27 02:27:46,539 - INFO - Processed 0 new vacancy emails
+2025-09-27 02:32:48,634 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-27 02:32:48,963 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-27 02:32:48,963 - INFO - Processed 0 new vacancy emails
+2025-09-27 02:37:51,397 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-27 02:37:52,527 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-27 02:37:52,527 - INFO - Processed 0 new vacancy emails
+2025-09-27 02:42:54,790 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-27 02:42:55,041 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-27 02:42:55,041 - INFO - Processed 0 new vacancy emails
+2025-09-27 02:47:57,255 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-27 02:47:57,545 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-27 02:47:57,545 - INFO - Processed 0 new vacancy emails
+2025-09-27 02:52:59,438 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-27 02:52:59,686 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-27 02:52:59,686 - INFO - Processed 0 new vacancy emails
+2025-09-27 02:58:01,552 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-27 02:58:01,780 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-27 02:58:01,781 - INFO - Processed 0 new vacancy emails
+2025-09-27 03:03:03,590 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-27 03:03:03,853 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-27 03:03:03,853 - INFO - Processed 0 new vacancy emails
+2025-09-27 03:08:05,995 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-27 03:08:06,464 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-27 03:08:06,464 - INFO - Processed 0 new vacancy emails
+2025-09-27 03:13:21,631 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-27 03:13:21,857 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-27 03:13:21,858 - INFO - Processed 0 new vacancy emails
+2025-09-27 03:18:23,632 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-27 03:18:23,886 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-27 03:18:23,887 - INFO - Processed 0 new vacancy emails
+2025-09-27 03:44:55,838 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-27 03:44:56,055 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-27 03:44:56,056 - INFO - Processed 0 new vacancy emails
+2025-09-27 04:07:11,150 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-27 04:07:11,383 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-27 04:07:11,383 - INFO - Processed 0 new vacancy emails
+2025-09-27 04:12:13,065 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-27 04:12:13,304 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-27 04:12:13,304 - INFO - Processed 0 new vacancy emails
+2025-09-27 04:17:15,273 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-27 04:17:15,548 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-27 04:17:15,548 - INFO - Processed 0 new vacancy emails
+2025-09-27 05:17:32,596 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-27 05:17:32,836 - INFO - Found 0 unread 'Open Vacancy' emails
+2025-09-27 05:17:32,837 - INFO - Processed 0 new vacancy emails

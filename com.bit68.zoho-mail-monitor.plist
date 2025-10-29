@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.bit68.zoho-mail-monitor</string>
+    
+    <key>ProgramArguments</key>
+    <array>
+        <string>/Library/Frameworks/Python.framework/Versions/3.13/bin/python3</string>
+        <string>/Users/NourSereg/Desktop/AI_Agent/zoho_mail_service.py</string>
+    </array>
+    
+    <key>WorkingDirectory</key>
+    <string>/Users/NourSereg/Desktop/AI_Agent</string>
+    
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>ZOHO_EMAIL</key>
+        <string>fahmy@bit68.com</string>
+        <key>ZOHO_APP_PASSWORD</key>
+        <string>A2kK1rYB2Ns3</string>
+        <key>DJANGO_API_URL</key>
+        <string>https://5ba70aac21c1.ngrok-free.app/api/inbound/email/</string>
+    </dict>
+    
+    <key>RunAtLoad</key>
+    <true/>
+    
+    <key>KeepAlive</key>
+    <true/>
+    
+    <key>StandardOutPath</key>
+    <string>/Users/NourSereg/Desktop/AI_Agent/logs/zoho_monitor.out</string>
+    
+    <key>StandardErrorPath</key>
+    <string>/Users/NourSereg/Desktop/AI_Agent/logs/zoho_monitor.err</string>
+    
+    <key>ProcessType</key>
+    <string>Background</string>
+</dict>
+</plist>

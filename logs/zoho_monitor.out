@@ -1,0 +1,161 @@
+🤖 AI Recruiter Zoho Mail Service
+==================================================
+2025-09-24 14:06:02,099 - INFO - ✅ Connected to Zoho Mail successfully
+✅ Connection test successful!
+🚀 Starting continuous monitoring service...
+Press Ctrl+C to stop
+2025-09-24 14:06:02,113 - INFO - 🚀 Starting Zoho Mail monitoring service
+2025-09-24 14:06:02,113 - INFO - 📧 Monitoring: fahmy@bit68.com
+2025-09-24 14:06:02,113 - INFO - 🔗 Django API: https://5ba70aac21c1.ngrok-free.app/api/inbound/email/
+2025-09-24 14:06:02,113 - INFO - ⏰ Check interval: 300 seconds
+2025-09-24 14:06:03,821 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-24 14:06:04,493 - ERROR - ❌ Error in process_emails: SEARCH command error: BAD [b"[CLIENTBUG] syntax: unexpected char: 'v'"]
+2025-09-24 14:06:04,493 - INFO - 📬 Processed 0 new emails
+2025-09-24 14:20:59,986 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-24 14:21:01,625 - ERROR - ❌ Error in process_emails: SEARCH command error: BAD [b"[CLIENTBUG] syntax: unexpected char: 'v'"]
+2025-09-24 14:21:01,626 - INFO - 📬 Processed 0 new emails
+2025-09-24 14:26:30,129 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-24 14:26:30,859 - ERROR - ❌ Error in process_emails: SEARCH command error: BAD [b"[CLIENTBUG] syntax: unexpected char: 'v'"]
+2025-09-24 14:26:30,859 - INFO - 📬 Processed 0 new emails
+2025-09-24 14:31:59,090 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-24 14:31:59,908 - ERROR - ❌ Error in process_emails: SEARCH command error: BAD [b"[CLIENTBUG] syntax: unexpected char: 'v'"]
+2025-09-24 14:31:59,908 - INFO - 📬 Processed 0 new emails
+2025-09-24 14:37:29,270 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-24 14:37:29,894 - ERROR - ❌ Error in process_emails: SEARCH command error: BAD [b"[CLIENTBUG] syntax: unexpected char: 'v'"]
+2025-09-24 14:37:29,894 - INFO - 📬 Processed 0 new emails
+2025-09-24 14:42:58,298 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-24 14:42:58,794 - ERROR - ❌ Error in process_emails: SEARCH command error: BAD [b"[CLIENTBUG] syntax: unexpected char: 'v'"]
+2025-09-24 14:42:58,794 - INFO - 📬 Processed 0 new emails
+2025-09-24 14:48:26,913 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-24 14:48:27,913 - ERROR - ❌ Error in process_emails: SEARCH command error: BAD [b"[CLIENTBUG] syntax: unexpected char: 'v'"]
+2025-09-24 14:48:27,914 - INFO - 📬 Processed 0 new emails
+2025-09-24 14:53:57,231 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-24 14:53:58,159 - ERROR - ❌ Error in process_emails: SEARCH command error: BAD [b"[CLIENTBUG] syntax: unexpected char: 'v'"]
+2025-09-24 14:53:58,159 - INFO - 📬 Processed 0 new emails
+2025-09-24 14:59:26,643 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-24 14:59:27,655 - ERROR - ❌ Error in process_emails: SEARCH command error: BAD [b"[CLIENTBUG] syntax: unexpected char: 'v'"]
+2025-09-24 14:59:27,657 - INFO - 📬 Processed 0 new emails
+2025-09-24 15:04:56,759 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-24 15:04:57,580 - ERROR - ❌ Error in process_emails: SEARCH command error: BAD [b"[CLIENTBUG] syntax: unexpected char: 'v'"]
+2025-09-24 15:04:57,581 - INFO - 📬 Processed 0 new emails
+2025-09-24 15:10:26,487 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-24 15:10:27,299 - ERROR - ❌ Error in process_emails: SEARCH command error: BAD [b"[CLIENTBUG] syntax: unexpected char: 'v'"]
+2025-09-24 15:10:27,299 - INFO - 📬 Processed 0 new emails
+2025-09-24 15:15:55,624 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-24 15:15:56,558 - ERROR - ❌ Error in process_emails: SEARCH command error: BAD [b"[CLIENTBUG] syntax: unexpected char: 'v'"]
+2025-09-24 15:15:56,558 - INFO - 📬 Processed 0 new emails
+2025-09-24 15:21:24,836 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-24 15:21:25,474 - ERROR - ❌ Error in process_emails: SEARCH command error: BAD [b"[CLIENTBUG] syntax: unexpected char: 'v'"]
+2025-09-24 15:21:25,474 - INFO - 📬 Processed 0 new emails
+2025-09-24 15:26:54,302 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-24 15:26:55,139 - ERROR - ❌ Error in process_emails: SEARCH command error: BAD [b"[CLIENTBUG] syntax: unexpected char: 'v'"]
+2025-09-24 15:26:55,139 - INFO - 📬 Processed 0 new emails
+2025-09-24 15:32:24,437 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-24 15:32:25,130 - ERROR - ❌ Error in process_emails: SEARCH command error: BAD [b"[CLIENTBUG] syntax: unexpected char: 'v'"]
+2025-09-24 15:32:25,131 - INFO - 📬 Processed 0 new emails
+2025-09-24 15:37:54,304 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-24 15:37:54,767 - ERROR - ❌ Error in process_emails: SEARCH command error: BAD [b"[CLIENTBUG] syntax: unexpected char: 'v'"]
+2025-09-24 15:37:54,768 - INFO - 📬 Processed 0 new emails
+2025-09-24 15:43:23,071 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-24 15:43:23,881 - ERROR - ❌ Error in process_emails: SEARCH command error: BAD [b"[CLIENTBUG] syntax: unexpected char: 'v'"]
+2025-09-24 15:43:23,881 - INFO - 📬 Processed 0 new emails
+2025-09-24 16:49:00,569 - ERROR - ❌ Failed to connect to Zoho Mail (attempt 1): [Errno 60] Operation timed out
+2025-09-24 16:49:00,587 - INFO - ⏳ Waiting 10 seconds before retry...
+2025-09-24 16:49:12,881 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-24 16:49:14,009 - ERROR - ❌ Error in process_emails: SEARCH command error: BAD [b"[CLIENTBUG] syntax: unexpected char: 'v'"]
+2025-09-24 16:49:14,010 - INFO - 📬 Processed 0 new emails
+2025-09-24 17:25:31,600 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-24 17:25:32,535 - ERROR - ❌ Error in process_emails: SEARCH command error: BAD [b"[CLIENTBUG] syntax: unexpected char: 'v'"]
+2025-09-24 17:25:32,535 - INFO - 📬 Processed 0 new emails
+2025-09-24 17:31:19,106 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-24 17:31:21,006 - ERROR - ❌ Error in process_emails: SEARCH command error: BAD [b"[CLIENTBUG] syntax: unexpected char: 'v'"]
+2025-09-24 17:31:21,006 - INFO - 📬 Processed 0 new emails
+2025-09-24 17:53:56,539 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-24 17:53:57,292 - ERROR - ❌ Error in process_emails: SEARCH command error: BAD [b"[CLIENTBUG] syntax: unexpected char: 'v'"]
+2025-09-24 17:53:57,292 - INFO - 📬 Processed 0 new emails
+2025-09-24 17:59:56,054 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-24 17:59:56,875 - ERROR - ❌ Error in process_emails: SEARCH command error: BAD [b"[CLIENTBUG] syntax: unexpected char: 'v'"]
+2025-09-24 17:59:56,875 - INFO - 📬 Processed 0 new emails
+2025-09-24 18:51:59,390 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-24 18:52:00,073 - ERROR - ❌ Error in process_emails: SEARCH command error: BAD [b"[CLIENTBUG] syntax: unexpected char: 'v'"]
+2025-09-24 18:52:00,073 - INFO - 📬 Processed 0 new emails
+2025-09-24 19:16:42,909 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-24 19:16:44,352 - ERROR - ❌ Error in process_emails: SEARCH command error: BAD [b"[CLIENTBUG] syntax: unexpected char: 'v'"]
+2025-09-24 19:16:44,353 - INFO - 📬 Processed 0 new emails
+2025-09-24 19:22:42,579 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-24 19:22:43,531 - ERROR - ❌ Error in process_emails: SEARCH command error: BAD [b"[CLIENTBUG] syntax: unexpected char: 'v'"]
+2025-09-24 19:22:43,531 - INFO - 📬 Processed 0 new emails
+2025-09-24 19:28:41,469 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-24 19:28:42,342 - ERROR - ❌ Error in process_emails: SEARCH command error: BAD [b"[CLIENTBUG] syntax: unexpected char: 'v'"]
+2025-09-24 19:28:42,342 - INFO - 📬 Processed 0 new emails
+2025-09-24 20:07:49,584 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-24 20:07:49,587 - ERROR - ❌ Error in process_emails: command: SELECT => IMAP4rev1 Server logging out
+2025-09-24 20:07:49,587 - INFO - 📬 Processed 0 new emails
+2025-09-24 20:13:46,912 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-24 20:13:47,687 - ERROR - ❌ Error in process_emails: SEARCH command error: BAD [b"[CLIENTBUG] syntax: unexpected char: 'v'"]
+2025-09-24 20:13:47,687 - INFO - 📬 Processed 0 new emails
+2025-09-24 20:20:13,366 - ERROR - ❌ Failed to connect to Zoho Mail (attempt 1): command: CAPABILITY => socket error: EOF
+2025-09-24 20:20:13,369 - INFO - ⏳ Waiting 10 seconds before retry...
+2025-09-24 20:20:25,782 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-24 20:20:27,042 - ERROR - ❌ Error in process_emails: SEARCH command error: BAD [b"[CLIENTBUG] syntax: unexpected char: 'v'"]
+2025-09-24 20:20:27,042 - INFO - 📬 Processed 0 new emails
+2025-09-24 20:25:56,790 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-24 20:25:57,700 - ERROR - ❌ Error in process_emails: SEARCH command error: BAD [b"[CLIENTBUG] syntax: unexpected char: 'v'"]
+2025-09-24 20:25:57,700 - INFO - 📬 Processed 0 new emails
+2025-09-24 20:31:26,260 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-24 20:31:27,356 - ERROR - ❌ Error in process_emails: SEARCH command error: BAD [b"[CLIENTBUG] syntax: unexpected char: 'v'"]
+2025-09-24 20:31:27,356 - INFO - 📬 Processed 0 new emails
+2025-09-24 20:36:55,696 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-24 20:36:56,847 - ERROR - ❌ Error in process_emails: SEARCH command error: BAD [b"[CLIENTBUG] syntax: unexpected char: 'v'"]
+2025-09-24 20:36:56,848 - INFO - 📬 Processed 0 new emails
+2025-09-24 20:42:25,290 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-24 20:42:26,317 - ERROR - ❌ Error in process_emails: SEARCH command error: BAD [b"[CLIENTBUG] syntax: unexpected char: 'v'"]
+2025-09-24 20:42:26,318 - INFO - 📬 Processed 0 new emails
+2025-09-24 20:47:54,600 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-24 20:47:55,721 - ERROR - ❌ Error in process_emails: SEARCH command error: BAD [b"[CLIENTBUG] syntax: unexpected char: 'v'"]
+2025-09-24 20:47:55,721 - INFO - 📬 Processed 0 new emails
+2025-09-24 20:53:24,725 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-24 20:53:25,789 - ERROR - ❌ Error in process_emails: SEARCH command error: BAD [b"[CLIENTBUG] syntax: unexpected char: 'v'"]
+2025-09-24 20:53:25,790 - INFO - 📬 Processed 0 new emails
+2025-09-24 20:58:55,277 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-24 20:58:56,151 - ERROR - ❌ Error in process_emails: SEARCH command error: BAD [b"[CLIENTBUG] syntax: unexpected char: 'v'"]
+2025-09-24 20:58:56,151 - INFO - 📬 Processed 0 new emails
+2025-09-24 21:04:25,028 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-24 21:04:25,959 - ERROR - ❌ Error in process_emails: SEARCH command error: BAD [b"[CLIENTBUG] syntax: unexpected char: 'v'"]
+2025-09-24 21:04:25,960 - INFO - 📬 Processed 0 new emails
+2025-09-24 21:09:53,833 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-24 21:09:54,535 - ERROR - ❌ Error in process_emails: SEARCH command error: BAD [b"[CLIENTBUG] syntax: unexpected char: 'v'"]
+2025-09-24 21:09:54,535 - INFO - 📬 Processed 0 new emails
+2025-09-24 21:15:22,091 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-24 21:15:22,973 - ERROR - ❌ Error in process_emails: SEARCH command error: BAD [b"[CLIENTBUG] syntax: unexpected char: 'v'"]
+2025-09-24 21:15:22,974 - INFO - 📬 Processed 0 new emails
+2025-09-24 21:20:51,931 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-24 21:20:53,169 - ERROR - ❌ Error in process_emails: SEARCH command error: BAD [b"[CLIENTBUG] syntax: unexpected char: 'v'"]
+2025-09-24 21:20:53,170 - INFO - 📬 Processed 0 new emails
+2025-09-24 21:26:23,010 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-24 21:26:23,921 - ERROR - ❌ Error in process_emails: SEARCH command error: BAD [b"[CLIENTBUG] syntax: unexpected char: 'v'"]
+2025-09-24 21:26:23,921 - INFO - 📬 Processed 0 new emails
+2025-09-24 21:31:52,393 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-24 21:31:54,244 - ERROR - ❌ Error in process_emails: SEARCH command error: BAD [b"[CLIENTBUG] syntax: unexpected char: 'v'"]
+2025-09-24 21:31:54,246 - INFO - 📬 Processed 0 new emails
+2025-09-24 21:37:22,349 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-24 21:37:23,066 - ERROR - ❌ Error in process_emails: SEARCH command error: BAD [b"[CLIENTBUG] syntax: unexpected char: 'v'"]
+2025-09-24 21:37:23,066 - INFO - 📬 Processed 0 new emails
+2025-09-24 21:42:51,696 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-24 21:42:53,552 - ERROR - ❌ Error in process_emails: SEARCH command error: BAD [b"[CLIENTBUG] syntax: unexpected char: 'v'"]
+2025-09-24 21:42:53,552 - INFO - 📬 Processed 0 new emails
+2025-09-24 21:48:22,068 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-24 21:48:23,233 - ERROR - ❌ Error in process_emails: SEARCH command error: BAD [b"[CLIENTBUG] syntax: unexpected char: 'v'"]
+2025-09-24 21:48:23,233 - INFO - 📬 Processed 0 new emails
+2025-09-24 21:53:51,626 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-24 21:53:52,469 - ERROR - ❌ Error in process_emails: SEARCH command error: BAD [b"[CLIENTBUG] syntax: unexpected char: 'v'"]
+2025-09-24 21:53:52,470 - INFO - 📬 Processed 0 new emails
+2025-09-24 21:59:21,818 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-24 21:59:23,060 - ERROR - ❌ Error in process_emails: SEARCH command error: BAD [b"[CLIENTBUG] syntax: unexpected char: 'v'"]
+2025-09-24 21:59:23,061 - INFO - 📬 Processed 0 new emails
+2025-09-24 22:04:51,601 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-24 22:04:52,529 - ERROR - ❌ Error in process_emails: SEARCH command error: BAD [b"[CLIENTBUG] syntax: unexpected char: 'v'"]
+2025-09-24 22:04:52,529 - INFO - 📬 Processed 0 new emails
+2025-09-24 22:10:21,046 - INFO - ✅ Connected to Zoho Mail successfully
+2025-09-24 22:10:22,017 - ERROR - ❌ Error in process_emails: SEARCH command error: BAD [b"[CLIENTBUG] syntax: unexpected char: 'v'"]
+2025-09-24 22:10:22,018 - INFO - 📬 Processed 0 new emails

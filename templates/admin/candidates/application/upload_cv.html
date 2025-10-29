@@ -1,0 +1,82 @@
+{% extends "admin/base_site.html" %}
+{% load i18n admin_urls static admin_modify %}
+
+{% block title %}{{ title }} | {{ site_title|default:_('Django site admin') }}{% endblock %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+<a href="{% url 'admin:index' %}">{% trans 'Home' %}</a>
+&rsaquo; <a href="{% url 'admin:candidates_application_changelist' %}">{% trans 'Applications' %}</a>
+&rsaquo; {% trans 'Upload CV' %}
+</div>
+{% endblock %}
+
+{% block content %}
+<h1>{% trans 'Upload CV for Application' %}</h1>
+
+<div class="module aligned">
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        
+        <fieldset class="module aligned">
+            <h2>{% trans 'CV Upload Details' %}</h2>
+            
+            <div class="form-row">
+                <div>
+                    <label for="{{ form.cv_file.id_for_label }}" class="required">{{ form.cv_file.label }}:</label>
+                    {{ form.cv_file }}
+                    {% if form.cv_file.help_text %}
+                        <p class="help">{{ form.cv_file.help_text }}</p>
+                    {% endif %}
+                    {% if form.cv_file.errors %}
+                        <ul class="errorlist">
+                            {% for error in form.cv_file.errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div>
+                    <label for="{{ form.vacancy.id_for_label }}" class="required">{{ form.vacancy.label }}:</label>
+                    {{ form.vacancy }}
+                    {% if form.vacancy.help_text %}
+                        <p class="help">{{ form.vacancy.help_text }}</p>
+                    {% endif %}
+                    {% if form.vacancy.errors %}
+                        <ul class="errorlist">
+                            {% for error in form.vacancy.errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                </div>
+            </div>
+        </fieldset>
+        
+        <div class="submit-row">
+            <input type="submit" value="{% trans 'Upload CV' %}" class="default" name="_save">
+            <a href="{% url 'admin:candidates_application_changelist' %}" class="button cancel-link">{% trans 'Cancel' %}</a>
+        </div>
+    </form>
+</div>
+
+<div class="module">
+    <h2>{% trans 'Instructions' %}</h2>
+    <div class="form-row">
+        <p>This form will:</p>
+        <ul>
+            <li>Upload and process the CV file using AI</li>
+            <li>Extract candidate information automatically from the CV</li>
+            <li>Create a new candidate record with extracted data</li>
+            <li>Create a new application linking the CV to the selected vacancy</li>
+            <li>Score the candidate against vacancy requirements using AI</li>
+            <li>Store all extracted data and analysis results</li>
+        </ul>
+        <p><strong>Supported file types:</strong> PDF, DOC, DOCX, TXT</p>
+        <p><strong>Note:</strong> Missing candidate information will be set to "Not Stated"</p>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,22 @@
+# Core
+django==4.2
+psycopg2-binary==2.9.9
+
+# Django REST Framework
+djangorestframework==3.14.0
+djangorestframework-simplejwt==5.3.1
+
+# Utilities
+django-filter==23.5        # for filtering querysets in APIs
+python-decouple==3.8       # for managing environment variables
+requests==2.31.0           # for OpenAI API calls
+
+# CV Processing
+PyPDF2==3.0.1              # for PDF text extraction
+python-docx==1.1.0         # for DOC/DOCX text extraction
+
+celery==5.3.0  # pyup: < 6.0  # https://github.com/celery/celery
+django-celery-beat==2.5.0  # https://github.com/celery/django-celery-beat
+flower==2.0.1  # https://github.com/mher/flower
+watchfiles==1.1.0  # https://github.com/samuelcolvin/watchfiles
+redis==5.0.1  # Redis client for Python
