@@ -10,6 +10,7 @@ djangorestframework-simplejwt==5.3.1
 django-filter==23.5        # for filtering querysets in APIs
 python-decouple==3.8       # for managing environment variables
 requests==2.31.0           # for OpenAI API calls
+python-decouple==3.6
 
 # CV Processing
 PyPDF2==3.0.1              # for PDF text extraction
