@@ -4,6 +4,8 @@ Django settings for recruiter project.
 
 from pathlib import Path
 import os
+from decouple import config
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -15,10 +17,9 @@ SECRET_KEY = os.environ.get(
 )
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.environ.get("DJANGO_DEBUG", "True") == "True"
+DEBUG = os.environ.get("DJANGO_DEBUG", default=False, cast=bool)
 
-ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1,0.0.0.0,web,recruiter.staging-bit68.com").split(",")
-
+ALLOWED_HOSTS = ["*"]
 
 # Application definition
 INSTALLED_APPS = [
@@ -84,11 +85,11 @@ else:
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql',
-            'NAME': os.environ.get('POSTGRES_DB', 'ai_agent'),
-            'USER': os.environ.get('POSTGRES_USER', 'ai_user'),
-            'PASSWORD': os.environ.get('POSTGRES_PASSWORD', 'ai_pass'),
-            'HOST': os.environ.get('POSTGRES_HOST', 'db'),  # matches docker-compose service name
-            'PORT': os.environ.get('POSTGRES_PORT', '5432'),
+            'NAME': config('POSTGRES_DB', cast=str),
+            'USER': config('POSTGRES_USER', cast=str),
+            'PASSWORD': config('POSTGRES_PASSWORD', cast=str),
+            'HOST': config('POSTGRES_HOST', cast=str),  # matches docker-compose service name
+            'PORT': config('POSTGRES_PORT', cast=str),
         }
     }
 
@@ -139,13 +140,13 @@ REST_FRAMEWORK = {
 
 # Email Configuration
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = os.environ.get('EMAIL_HOST', 'smtppro.zoho.com')
-EMAIL_PORT = int(os.environ.get('EMAIL_PORT', '465'))
-EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', 'False') == 'True'
-EMAIL_USE_SSL = os.environ.get('EMAIL_USE_SSL', 'True') == 'True'
-EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', 'fahmy@bit68.com')
-EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', 'A2kK1rYB2Ns3')
-DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'fahmy@bit68.com')
+EMAIL_HOST = config('EMAIL_HOST')
+EMAIL_PORT = config('EMAIL_PORT')
+EMAIL_USE_TLS = config('EMAIL_USE_TLS')
+EMAIL_USE_SSL = config('EMAIL_USE_SSL')
+EMAIL_HOST_USER = config('EMAIL_HOST_USER', 'fahmy@bit68.com')
+EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', 'A2kK1rYB2Ns3')
+DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', 'fahmy@bit68.com')
 
 ##you'll have working endpoints:
 #http://localhost:8040/api/users/
