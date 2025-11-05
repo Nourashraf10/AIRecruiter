@@ -18,6 +18,7 @@ SECRET_KEY = os.environ.get(
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config("DJANGO_DEBUG", default=False, cast=bool)
+IS_PRODUCTION = config("IS_PRODUCTION", default=False, cast=bool)
 
 ALLOWED_HOSTS = ["*"]
 
@@ -74,24 +75,16 @@ WSGI_APPLICATION = 'recruiter.wsgi.application'
 
 
 # Database
-if os.environ.get('USE_SQLITE', '0') == '1':
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': BASE_DIR / 'db.sqlite3',
-        }
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': config('POSTGRES_DB', cast=str),
+        'USER': config('POSTGRES_USER', cast=str),
+        'PASSWORD': config('POSTGRES_PASSWORD', cast=str),
+        'HOST': config('POSTGRES_HOST', cast=str),  # matches docker-compose service name
+        'PORT': config('POSTGRES_PORT', cast=str),
     }
-else:
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.postgresql',
-            'NAME': config('POSTGRES_DB', cast=str),
-            'USER': config('POSTGRES_USER', cast=str),
-            'PASSWORD': config('POSTGRES_PASSWORD', cast=str),
-            'HOST': config('POSTGRES_HOST', cast=str),  # matches docker-compose service name
-            'PORT': config('POSTGRES_PORT', cast=str),
-        }
-    }
+}
 
 
 # Password validation
@@ -109,16 +102,15 @@ TIME_ZONE = os.environ.get('TIME_ZONE', 'Africa/Cairo')  # Egypt timezone (UTC+3
 USE_I18N = True
 USE_TZ = True
 
-
-# Static files
 STATIC_URL = '/static/'
-STATIC_ROOT = BASE_DIR / "staticfiles"
+MEDIA_URL = '/media/'
 
-# Serve static files in development
-if DEBUG:
-    STATICFILES_DIRS = [
-        BASE_DIR / "static",
-    ]
+if IS_PRODUCTION:
+    STATIC_ROOT = "/var/www/html/recruiter/static"
+    MEDIA_ROOT = "/var/www/html/recruiter/media"
+else:
+    STATIC_ROOT = BASE_DIR / "staticfiles"
+    MEDIA_ROOT = BASE_DIR / "media"
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
@@ -138,12 +130,15 @@ REST_FRAMEWORK = {
     ),
 }
 
+CSRF_TRUSTED_ORIGINS = [
+    "https://recruiter.staging-bit68.com",
+]
+
 # Email Configuration
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = config('EMAIL_HOST')
 EMAIL_PORT = config('EMAIL_PORT')
-EMAIL_USE_TLS = config('EMAIL_USE_TLS')
-EMAIL_USE_SSL = config('EMAIL_USE_SSL')
+EMAIL_USE_TLS = config("EMAIL_USE_TLS")
 EMAIL_HOST_USER = config('EMAIL_HOST_USER', 'fahmy@bit68.com')
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', 'A2kK1rYB2Ns3')
 DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', 'fahmy@bit68.com')
