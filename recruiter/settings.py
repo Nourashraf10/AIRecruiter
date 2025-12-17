@@ -143,8 +143,8 @@ EMAIL_HOST = os.environ.get('EMAIL_HOST', config('EMAIL_HOST', default='smtppro.
 EMAIL_PORT = int(os.environ.get('EMAIL_PORT', config('EMAIL_PORT', default='465')))
 EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', config('EMAIL_USE_TLS', default='False')) in ['True', 'true', '1']
 EMAIL_USE_SSL = os.environ.get('EMAIL_USE_SSL', config('EMAIL_USE_SSL', default='True')) in ['True', 'true', '1']
-EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', config('EMAIL_HOST_USER', default='fahmy@bit68.com'))
-EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', config('EMAIL_HOST_PASSWORD', default='A2kK1rYB2Ns3'))
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER') or config('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD') or config('EMAIL_HOST_PASSWORD')
 DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', config('DEFAULT_FROM_EMAIL', default=None)) or EMAIL_HOST_USER
 
 ##you'll have working endpoints:

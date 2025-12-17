@@ -3,3 +3,6 @@ env/
 *.pyc
 __pycache__/
 logs/*.err
+*.plist
+logs/*.log
+logs/*.out

@@ -1,8 +1,15 @@
+## License
+
+© 2025 Nour Ashraf. All rights reserved.
+
+This project is publicly viewable for demonstration purposes only. 
+Any copying, redistribution, or commercial use is strictly prohibited without explicit permission.
+
 🤖 AI Recruiter Agent
 Automating the hiring workflow from vacancy creation to candidate evaluation and interview scheduling.
 📧 Agent Information
 Agent Name: AI Recruiter
-Agent Email: fahmy@bit68.com
+Agent Email: recruiter@example.com
 Purpose: Automate HR and recruitment tasks (vacancy creation, candidate screening, interview scheduling, and feedback collection).
 🧩 Overview
 The AI Recruiter automates the end-to-end recruitment process for your company:
@@ -13,13 +20,13 @@ Schedules interviews and manages questionnaires.
 Gathers interview feedback and compiles structured candidate profiles.
 📨 How to Use
 Step 1 — Create a New Vacancy
-Send an email to the AI Recruiter (fahmy@bit68.com) with the following details:
+Send an email to the AI Recruiter (recruiter@example.com) with the following details:
 Subject:
 Open Vacancy
 Body Example:
 Title: Fullstack Developer
 Department: Engineering
-Manager Email: noureldin.ashraf@bit68.com
+Manager Email: noureldin.ashraf@example.com
 Keywords: python, django, postgres, aws, rest api
 RequireDOB: true
 RequireEgyptian: false

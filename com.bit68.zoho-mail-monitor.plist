@@ -16,12 +16,10 @@
     
     <key>EnvironmentVariables</key>
     <dict>
-        <key>ZOHO_EMAIL</key>
-        <string>fahmy@bit68.com</string>
-        <key>ZOHO_APP_PASSWORD</key>
-        <string>A2kK1rYB2Ns3</string>
-        <key>DJANGO_API_URL</key>
-        <string>https://5ba70aac21c1.ngrok-free.app/api/inbound/email/</string>
+        <!-- NOTE: Set ZOHO_EMAIL, ZOHO_EMAIL_PASSWORD, and DJANGO_API_URL in your environment or .env file -->
+        <!-- This plist should not contain hardcoded credentials for security -->
+        <key>DJANGO_SETTINGS_MODULE</key>
+        <string>recruiter.settings</string>
     </dict>
     
     <key>RunAtLoad</key>

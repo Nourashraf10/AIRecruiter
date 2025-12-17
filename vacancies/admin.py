@@ -12,10 +12,10 @@ import os
 import certifi
 from comms.daily_automation_service import DailyAutomationService
 
-# Test CalDAV credentials for admin actions (for easing testing)
-TEST_CALDAV_USERNAME = "noureldin.ashraf@bit68.com"
-TEST_CALDAV_PASSWORD = "Dvg2e2AG8dXM"
-TEST_CALDAV_URL = "https://calendar.zoho.com/caldav/bca62345ad5e4b609586bf2d53fc9cc7/events/"
+# Test CalDAV credentials for admin actions (loaded from environment)
+TEST_CALDAV_USERNAME = os.environ.get('CALDAV_USERNAME_1')
+TEST_CALDAV_PASSWORD = os.environ.get('CALDAV_PASSWORD_1')
+TEST_CALDAV_URL = os.environ.get('CALDAV_URL_1')
 
 @admin.register(Vacancy)
 class VacancyAdmin(admin.ModelAdmin):

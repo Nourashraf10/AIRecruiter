@@ -170,9 +170,9 @@ Best regards,
 EMAIL_HOST=smtppro.zoho.com
 EMAIL_PORT=465
 EMAIL_USE_SSL=True
-EMAIL_HOST_USER=fahmy@bit68.com
-EMAIL_HOST_PASSWORD=A2kK1rYB2Ns3
-DEFAULT_FROM_EMAIL=fahmy@bit68.com
+EMAIL_HOST_USER=your-email@domain.com
+EMAIL_HOST_PASSWORD=your-app-password-here
+DEFAULT_FROM_EMAIL=your-email@domain.com
 
 # OpenAI Configuration
 OPENAI_API_KEY=sk-proj-...

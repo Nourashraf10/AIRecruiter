@@ -41,8 +41,11 @@ class ZohoMailMonitor:
         self.imap_port = 993
         
         # AI Recruiter email credentials from environment variables
-        self.email_address = os.environ.get('ZOHO_EMAIL', 'fahmy@bit68.com')
-        self.email_password = os.environ.get('ZOHO_EMAIL_PASSWORD', 'A2kK1rYB2Ns3')
+        self.email_address = os.environ.get('ZOHO_EMAIL')
+        self.email_password = os.environ.get('ZOHO_EMAIL_PASSWORD')
+        
+        if not self.email_address or not self.email_password:
+            raise ValueError("ZOHO_EMAIL and ZOHO_EMAIL_PASSWORD must be set in environment variables")
         
         # Django API endpoint
         # Check if URL is explicitly set
