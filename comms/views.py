@@ -110,7 +110,10 @@ class InboundEmailView(APIView):
         
         # If no manager email provided, use default manager
         if not manager_email or manager_email.strip() == '':
-            manager_email = 'noureldin.ashraf@bit68.com'
+            from django.conf import settings
+            manager_email = getattr(settings, 'DEFAULT_MANAGER_EMAIL', '')
+            if not manager_email:
+                raise ValueError("DEFAULT_MANAGER_EMAIL must be set in environment variables")
             print(f"⚠️ No manager email provided, using default: {manager_email}")
         
         manager = User.objects.filter(email=manager_email).first()
@@ -262,8 +265,8 @@ Please review and approve/reject using the following link:
 
 Best regards,
 Fahmy
-fahmy@bit68.com
-        """.strip()
+{recruiter_email}
+        """.strip().format(recruiter_email=getattr(settings, 'AI_RECRUITER_EMAIL', settings.DEFAULT_FROM_EMAIL))
 
         # Store outgoing email record
         outgoing_email = OutgoingEmail.objects.create(
@@ -634,7 +637,7 @@ Fahmy
                     subject=subject,
                     body=text_content,
                     from_email=settings.DEFAULT_FROM_EMAIL,
-                    to=['noureldin.ashraf@bit68.com']
+                    to=[getattr(settings, 'DEFAULT_MANAGER_EMAIL', settings.DEFAULT_FROM_EMAIL)]
                 )
                 email.attach_alternative(html_content, "text/html")
                 email.send(fail_silently=False)

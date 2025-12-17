@@ -3,6 +3,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.db.models import F
 from django.utils import timezone
+from django.conf import settings
 from datetime import timedelta
 from .models import Vacancy
 from .serializers import VacancySerializer
@@ -146,7 +147,7 @@ We are looking for a talented {vacancy.title} to join our {vacancy.department} t
 • Growth opportunities
 
 📧 How to Apply:
-Send your CV to: noureldin.ashraf@bit68.com
+Send your CV to: {getattr(settings, 'APPLICATION_EMAIL', settings.DEFAULT_FROM_EMAIL)}
 Subject: Application for {vacancy.title}
 
 Include in your application:

@@ -145,6 +145,11 @@ EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', config('EMAIL_USE_TLS', default=
 EMAIL_USE_SSL = os.environ.get('EMAIL_USE_SSL', config('EMAIL_USE_SSL', default='True')) in ['True', 'true', '1']
 EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER') or config('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD') or config('EMAIL_HOST_PASSWORD')
+
+# Company email addresses (loaded from environment)
+DEFAULT_MANAGER_EMAIL = os.environ.get('DEFAULT_MANAGER_EMAIL') or config('DEFAULT_MANAGER_EMAIL', default='')
+AI_RECRUITER_EMAIL = os.environ.get('AI_RECRUITER_EMAIL') or config('AI_RECRUITER_EMAIL', default='')
+APPLICATION_EMAIL = os.environ.get('APPLICATION_EMAIL') or config('APPLICATION_EMAIL', default='')
 DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', config('DEFAULT_FROM_EMAIL', default=None)) or EMAIL_HOST_USER
 
 ##you'll have working endpoints:

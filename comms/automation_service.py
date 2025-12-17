@@ -119,6 +119,7 @@ class AutomatedInterviewScheduler:
         try:
             subject = "📅 Calendar Integration Confirmed - AI Recruiter"
             
+            recruiter_email = getattr(settings, 'AI_RECRUITER_EMAIL', settings.DEFAULT_FROM_EMAIL)
             message = f"""
 Dear {manager.get_full_name() or manager.username},
 
@@ -142,7 +143,7 @@ You will receive notifications when:
 
 Best regards,
 Fahmy
-fahmy@bit68.com
+{recruiter_email}
             """.strip()
             
             send_mail(
@@ -271,6 +272,7 @@ Time: {interview.scheduled_at.strftime('%H:%M')} - {(interview.scheduled_at + ti
 Duration: {interview.duration_minutes} minutes
 """)
             
+            recruiter_email = getattr(settings, 'AI_RECRUITER_EMAIL', settings.DEFAULT_FROM_EMAIL)
             message = f"""
 Dear {vacancy.manager.get_full_name() or vacancy.manager.username},
 
@@ -295,7 +297,7 @@ Next Steps:
 
 Best regards,
 Fahmy
-fahmy@bit68.com
+{recruiter_email}
             """.strip()
             
             send_mail(
@@ -657,12 +659,13 @@ Duration: {interview.duration_minutes} minutes
 
 """
             
-            manager_message += """
+            recruiter_email = getattr(settings, 'AI_RECRUITER_EMAIL', settings.DEFAULT_FROM_EMAIL)
+            manager_message += f"""
 Please prepare for these interviews and ensure you're available at the scheduled times.
 
 Best regards,
 Fahmy
-fahmy@bit68.com
+{recruiter_email}
             """.strip()
             
             send_mail(
