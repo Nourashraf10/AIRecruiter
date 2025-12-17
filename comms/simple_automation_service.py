@@ -158,7 +158,7 @@ Shortlisted Candidates:
 Please coordinate with the candidates to schedule interviews.
 
 Best regards,
-AI Recruiting System
+Fahmy
 """
             
             # Send email
@@ -201,7 +201,7 @@ Your AI Score: {candidate.ai_score_out_of_10}/10
 The hiring manager will contact you shortly to schedule an interview.
 
 Best regards,
-AI Recruiting System
+Fahmy
 """
             
             # Send email

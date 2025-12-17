@@ -104,7 +104,34 @@ services:
     volumes:
       - redisdata:/data
 
-      
+  mailmonitor:
+    <<: *web
+    image: ai_agent-web
+    container_name: mailmonitor
+    depends_on:
+      web:
+        condition: service_started
+      db:
+        condition: service_healthy
+    ports: []
+    command: sh -c "cd /app && python wait_for_web.py && python zoho_mail_monitor.py"
+    restart: always
+    environment:
+      # Zoho Mail Monitor
+      ZOHO_EMAIL: ${ZOHO_EMAIL}
+      ZOHO_EMAIL_PASSWORD: ${ZOHO_EMAIL_PASSWORD}
+      DOCKER_CONTAINER: "1"
+      DJANGO_SETTINGS_MODULE: recruiter.settings
+      # Django API URL - can be overridden via .env
+      DJANGO_API_URL: ${DJANGO_API_URL:-http://web:8000/api/inbound/email/}
+      # Database
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_HOST: db
+      POSTGRES_PORT: ${POSTGRES_PORT}
+    networks:
+      - default
 
   # flower:
   #   <<: *web

@@ -232,7 +232,7 @@ class DailyAutomationService:
             f"You have been shortlisted for the position '{vacancy.title}'.\n"
             f"Please complete this quick questionnaire by replying to this email:\n\n"
             f"{questionnaire}\n\n"
-            f"Best regards,\nAI Recruiting System"
+            f"Best regards,\nFahmy"
         )
         send_mail(
             subject=subject,
@@ -273,7 +273,7 @@ Shortlisted Candidates:
 Please coordinate with the candidates to schedule interviews.
 
 Best regards,
-AI Recruiting System
+Fahmy
 """
             
             # Send email
@@ -316,7 +316,7 @@ Your AI Score: {candidate.ai_score_out_of_10}/10
 The hiring manager will contact you shortly to schedule an interview.
 
 Best regards,
-AI Recruiting System
+Fahmy
 """
             
             # Send email

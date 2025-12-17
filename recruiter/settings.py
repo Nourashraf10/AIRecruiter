@@ -111,6 +111,9 @@ if IS_PRODUCTION:
 else:
     STATIC_ROOT = BASE_DIR / "staticfiles"
     MEDIA_ROOT = BASE_DIR / "media"
+    STATICFILES_DIRS = [
+        BASE_DIR / "static",
+    ]
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
@@ -136,12 +139,13 @@ CSRF_TRUSTED_ORIGINS = [
 
 # Email Configuration
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = config('EMAIL_HOST')
-EMAIL_PORT = config('EMAIL_PORT')
-EMAIL_USE_TLS = config("EMAIL_USE_TLS")
-EMAIL_HOST_USER = config('EMAIL_HOST_USER', 'fahmy@bit68.com')
-EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', 'A2kK1rYB2Ns3')
-DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', 'fahmy@bit68.com')
+EMAIL_HOST = os.environ.get('EMAIL_HOST', config('EMAIL_HOST', default='smtppro.zoho.com'))
+EMAIL_PORT = int(os.environ.get('EMAIL_PORT', config('EMAIL_PORT', default='465')))
+EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', config('EMAIL_USE_TLS', default='False')) in ['True', 'true', '1']
+EMAIL_USE_SSL = os.environ.get('EMAIL_USE_SSL', config('EMAIL_USE_SSL', default='True')) in ['True', 'true', '1']
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', config('EMAIL_HOST_USER', default='fahmy@bit68.com'))
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', config('EMAIL_HOST_PASSWORD', default='A2kK1rYB2Ns3'))
+DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', config('DEFAULT_FROM_EMAIL', default=None)) or EMAIL_HOST_USER
 
 ##you'll have working endpoints:
 #http://localhost:8040/api/users/
@@ -170,12 +174,16 @@ CELERY_BEAT_SCHEDULE = {
         "task": "interviews.tasks.check_and_send_feedback_requests",
         "schedule": crontab(minute='*'),  # Every minute
     },
-    "check_linkedin_inbox_every_6h": {
+    "check_linkedin_inbox_every_minute": {
         "task": "comms.tasks.check_linkedin_inbox",
-        "schedule": crontab(minute=0, hour="*/6"),
+        "schedule": crontab(minute="*"),
     },
     "process_questionnaire_reply_emails": {
         "task": "interviews.tasks.process_questionnaire_reply_emails",
-        "schedule": crontab(minute='*/10'),  # Every 10 minutes
+        "schedule": crontab(minute='*'),  # Every minute
+    },
+    "process_manager_feedback_emails": {
+        "task": "interviews.tasks.process_manager_feedback_emails",
+        "schedule": crontab(minute='*'),  # Every minute
     },
 }

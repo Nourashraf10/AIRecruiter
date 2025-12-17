@@ -1,0 +1,364 @@
+{% extends "admin/base_site.html" %}
+{% load i18n admin_urls static %}
+
+{% block title %}{{ title }} | {{ site_title|default:_('Django site admin') }}{% endblock %}
+
+{% block extrahead %}
+{{ block.super }}
+<style>
+    .fahmy-container {
+        max-width: 1200px;
+        margin: 20px auto;
+        padding: 20px;
+        background: #f8f9fa;
+        border-radius: 8px;
+    }
+    
+    .fahmy-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 20px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        text-align: center;
+    }
+    
+    .fahmy-header h1 {
+        margin: 0;
+        font-size: 28px;
+    }
+    
+    .fahmy-header p {
+        margin: 10px 0 0 0;
+        opacity: 0.9;
+    }
+    
+    .query-form {
+        background: white;
+        padding: 25px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        margin-bottom: 20px;
+    }
+    
+    .form-group {
+        margin-bottom: 20px;
+    }
+    
+    .form-group label {
+        display: block;
+        font-weight: bold;
+        margin-bottom: 8px;
+        color: #333;
+    }
+    
+    .form-group input[type="text"],
+    .form-group select {
+        width: 100%;
+        padding: 12px;
+        border: 2px solid #ddd;
+        border-radius: 6px;
+        font-size: 16px;
+        transition: border-color 0.3s;
+    }
+    
+    .form-group input[type="text"]:focus,
+    .form-group select:focus {
+        outline: none;
+        border-color: #667eea;
+    }
+    
+    .form-group textarea {
+        width: 100%;
+        padding: 12px;
+        border: 2px solid #ddd;
+        border-radius: 6px;
+        font-size: 16px;
+        min-height: 100px;
+        resize: vertical;
+    }
+    
+    .submit-btn {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 12px 30px;
+        border: none;
+        border-radius: 6px;
+        font-size: 16px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+    
+    .submit-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(102, 126, 234, 0.4);
+    }
+    
+    .examples {
+        background: #e8f4f8;
+        padding: 15px;
+        border-radius: 6px;
+        margin-top: 15px;
+    }
+    
+    .examples h3 {
+        margin-top: 0;
+        color: #667eea;
+    }
+    
+    .examples ul {
+        margin: 10px 0;
+        padding-left: 20px;
+    }
+    
+    .examples li {
+        margin: 8px 0;
+        color: #555;
+    }
+    
+    .results-section {
+        background: white;
+        padding: 25px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        margin-top: 20px;
+    }
+    
+    .results-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        padding-bottom: 15px;
+        border-bottom: 2px solid #eee;
+    }
+    
+    .results-count {
+        font-size: 18px;
+        font-weight: bold;
+        color: #667eea;
+    }
+    
+    .explanation-box {
+        background: #f0f7ff;
+        border-left: 4px solid #667eea;
+        padding: 15px;
+        margin-bottom: 20px;
+        border-radius: 4px;
+    }
+    
+    .candidates-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+    }
+    
+    .candidates-table th {
+        background: #667eea;
+        color: white;
+        padding: 12px;
+        text-align: left;
+        font-weight: bold;
+    }
+    
+    .candidates-table td {
+        padding: 12px;
+        border-bottom: 1px solid #eee;
+    }
+    
+    .candidates-table tr:hover {
+        background: #f8f9fa;
+    }
+    
+    .badge {
+        display: inline-block;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: bold;
+    }
+    
+    .badge-success {
+        background: #28a745;
+        color: white;
+    }
+    
+    .badge-warning {
+        background: #ffc107;
+        color: #333;
+    }
+    
+    .badge-info {
+        background: #17a2b8;
+        color: white;
+    }
+    
+    .no-results {
+        text-align: center;
+        padding: 40px;
+        color: #999;
+    }
+    
+    .filters-applied {
+        background: #fff3cd;
+        border: 1px solid #ffc107;
+        padding: 15px;
+        border-radius: 6px;
+        margin-bottom: 20px;
+    }
+    
+    .filters-applied h4 {
+        margin-top: 0;
+        color: #856404;
+    }
+</style>
+{% endblock %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+    <a href="{% url 'admin:index' %}">{% trans 'Home' %}</a>
+    &rsaquo; <a href="{% url 'admin:candidates_candidatevacancyprofile_changelist' %}">{% trans 'Candidate Vacancy Profiles' %}</a>
+    &rsaquo; {% trans 'Fahmy AI Assistant' %}
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="fahmy-container">
+    <div class="fahmy-header">
+        <h1>🤖 Fahmy AI Assistant</h1>
+        <p>Ask me to find candidates using natural language. I'll understand your query and filter candidates accordingly.</p>
+    </div>
+    
+    <div class="query-form">
+        <form method="post">
+            {% csrf_token %}
+            
+            <div class="form-group">
+                <label for="vacancy_id">Filter by Vacancy (Optional):</label>
+                <select name="vacancy_id" id="vacancy_id">
+                    <option value="">All Vacancies</option>
+                    {% for vacancy in vacancies %}
+                        <option value="{{ vacancy.id }}" {% if vacancy_id == vacancy.id|stringformat:"s" %}selected{% endif %}>
+                            {{ vacancy.title }} ({{ vacancy.department }})
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="query">Ask Fahmy to find candidates:</label>
+                <textarea name="query" id="query" placeholder="Example: Get me candidates with engineering background only" required>{{ query }}</textarea>
+                <p class="help">Type your query in natural language. Fahmy will understand and filter candidates accordingly.</p>
+            </div>
+            
+            <div class="submit-row">
+                <button type="submit" class="submit-btn">🔍 Search Candidates</button>
+            </div>
+        </form>
+        
+        <div class="examples">
+            <h3>💡 Example Queries:</h3>
+            <ul>
+                <li><strong>"Get candidates with engineering background only"</strong></li>
+                <li><strong>"Show me candidates with bachelor degree in computer science"</strong></li>
+                <li><strong>"Find candidates with AI score above 7"</strong></li>
+                <li><strong>"Get candidates recommended by managers"</strong></li>
+                <li><strong>"Show candidates with interview scheduled"</strong></li>
+                <li><strong>"Find candidates with manager rating 4 or higher"</strong></li>
+                <li><strong>"Get candidates with Python skills"</strong></li>
+            </ul>
+        </div>
+    </div>
+    
+    {% if explanation %}
+    <div class="explanation-box">
+        <strong>📋 Fahmy's Understanding:</strong> {{ explanation }}
+    </div>
+    {% endif %}
+    
+    {% if filters_applied %}
+    <div class="filters-applied">
+        <h4>🔧 Filters Applied:</h4>
+        <ul>
+            {% for key, value in filters_applied.items %}
+                {% if value %}
+                    <li><strong>{{ key|title }}:</strong> {{ value }}</li>
+                {% endif %}
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+    
+    {% if candidates %}
+    <div class="results-section">
+        <div class="results-header">
+            <div class="results-count">📊 Found {{ candidates|length }} candidate{{ candidates|length|pluralize }}</div>
+        </div>
+        
+        <table class="candidates-table">
+            <thead>
+                <tr>
+                    <th>Candidate</th>
+                    <th>Email</th>
+                    <th>Vacancy</th>
+                    <th>AI Score</th>
+                    <th>Manager Rating</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for profile in candidates %}
+                <tr>
+                    <td>
+                        <strong>{{ profile.candidate.full_name }}</strong>
+                        {% if profile.candidate.nationality %}
+                            <br><small style="color: #666;">{{ profile.candidate.nationality }}</small>
+                        {% endif %}
+                    </td>
+                    <td>{{ profile.candidate.email }}</td>
+                    <td>{{ profile.vacancy.title }}</td>
+                    <td>
+                        {% if profile.ai_score %}
+                            <span class="badge {% if profile.ai_score >= 7 %}badge-success{% elif profile.ai_score >= 5 %}badge-warning{% else %}badge-info{% endif %}">
+                                {{ profile.ai_score }}/10
+                            </span>
+                        {% else %}
+                            <span style="color: #999;">N/A</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if profile.manager_rating %}
+                            <span class="badge badge-info">{{ profile.manager_rating }}/5</span>
+                        {% else %}
+                            <span style="color: #999;">N/A</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if profile.application_status %}
+                            <span class="badge badge-info">{{ profile.get_application_status_display|default:profile.application_status }}</span>
+                        {% else %}
+                            <span style="color: #999;">-</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <a href="{% url 'admin:candidates_candidatevacancyprofile_change' profile.id %}" class="button" style="padding: 4px 8px; font-size: 12px;">View</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% elif query %}
+    <div class="results-section">
+        <div class="no-results">
+            <p>🔍 No candidates found matching your criteria.</p>
+            <p>Try adjusting your query or removing some filters.</p>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+

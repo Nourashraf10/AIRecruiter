@@ -141,6 +141,76 @@ class SimpleCalDavClient:
         resp.raise_for_status()
         return resp.text
 
+    def list_all_events(self) -> List[Dict[str, Any]]:
+        """List all events in the calendar using PROPFIND when REPORT fails."""
+        import re
+        from xml.etree import ElementTree as ET
+        
+        # PROPFIND to list all .ics files
+        propfind_xml = """<?xml version="1.0"?>
+<d:propfind xmlns:d="DAV:">
+  <d:prop>
+    <d:getetag/>
+    <d:getcontenttype/>
+  </d:prop>
+</d:propfind>"""
+        
+        headers = {
+            'Content-Type': 'application/xml; charset=utf-8',
+            'Depth': '1',
+        }
+        
+        try:
+            resp = requests.request(
+                method='PROPFIND',
+                url=self.caldav_url,
+                headers=headers,
+                data=propfind_xml.encode('utf-8'),
+                auth=self.auth,
+                timeout=self.timeout_seconds,
+            )
+            resp.raise_for_status()
+            
+            # Parse XML response to get .ics file references
+            root = ET.fromstring(resp.text)
+            ns = {'D': 'DAV:'}
+            ics_files = []
+            
+            for href_elem in root.findall('.//D:href', ns):
+                if href_elem.text and href_elem.text.endswith('.ics'):
+                    ics_files.append(href_elem.text)
+            
+            # Fetch and parse each .ics file
+            events = []
+            for ics_path in ics_files:
+                try:
+                    # Construct full URL
+                    if ics_path.startswith('/'):
+                        # Full path from root
+                        event_url = 'https://calendar.zoho.com' + ics_path
+                    else:
+                        # Relative path
+                        filename = ics_path.split('/')[-1]
+                        event_url = self.caldav_url.rstrip('/') + '/' + filename
+                    
+                    # Fetch the .ics file
+                    ics_resp = requests.get(event_url, auth=self.auth, timeout=self.timeout_seconds)
+                    ics_resp.raise_for_status()
+                    
+                    # Parse the iCalendar data
+                    ics_events = self._parse_ics_text(ics_resp.text)
+                    events.extend(ics_events)
+                    
+                except Exception as e:
+                    logger.warning(f"Failed to fetch event {ics_path}: {e}")
+                    continue
+            
+            return events
+            
+        except Exception as e:
+            logger.error(f"Failed to list events via PROPFIND: {e}")
+            return []
+
     def parse_ics_events(self, multistatus_text: str) -> List[Dict[str, Any]]:
         """Extract VEVENT components with DTSTART/DTEND from multistatus text.
         Handles both XML multistatus responses and embedded iCalendar data.
@@ -164,6 +234,11 @@ class SimpleCalDavClient:
         # Fallback: try to parse as direct iCalendar format
         if not events and 'BEGIN:VEVENT' in multistatus_text:
             events = self._parse_ics_text(multistatus_text)
+        
+        # Final fallback: if REPORT returned empty, try listing all events
+        if not events:
+            logger.info("REPORT returned no events, falling back to PROPFIND listing")
+            events = self.list_all_events()
         
         return events
     
@@ -237,12 +312,20 @@ class SimpleCalDavClient:
         # Handles Zulu or naive local; default to UTC when Z
         try:
             if value.endswith('Z'):
-                return datetime.strptime(value, '%Y%m%dT%H%M%SZ')
+                dt = datetime.strptime(value, '%Y%m%dT%H%M%SZ')
+                return dt.replace(tzinfo=timezone.utc)
             # if has seconds optional
             try:
-                return datetime.strptime(value, '%Y%m%dT%H%M%S')
+                dt = datetime.strptime(value, '%Y%m%dT%H%M%S')
+                # Assume UTC if no timezone info
+                return dt.replace(tzinfo=timezone.utc)
             except Exception:
-                return datetime.strptime(value, '%Y%m%d')
+                dt = datetime.strptime(value, '%Y%m%d')
+                return dt.replace(tzinfo=timezone.utc)
         except Exception:
             # fallback: ISO
-            return datetime.fromisoformat(value.replace('Z', '+00:00'))
+            try:
+                return datetime.fromisoformat(value.replace('Z', '+00:00'))
+            except Exception:
+                # Last resort: assume UTC
+                return datetime.fromisoformat(value).replace(tzinfo=timezone.utc)

@@ -1,0 +1,7 @@
+/* Custom Admin CSS - Minimal overrides only */
+
+/* Keep branding simple */
+#branding h1,
+#branding h1 a {
+    color: #417690;
+}

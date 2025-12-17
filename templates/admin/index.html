@@ -41,8 +41,8 @@
 }
 
 .quick-action-card {
-    background: white;
-    border: 1px solid #ddd;
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
     border-radius: 8px;
     padding: 20px;
     text-align: center;
@@ -111,6 +111,12 @@
     <div class="quick-action-card">
         <h4>📝 Shortlists</h4>
         <a href="{% url 'admin:vacancies_shortlist_changelist' %}">Manage Shortlists</a>
+    </div>
+    
+    <div class="quick-action-card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+        <h4 style="color: white;">🤖 Fahmy AI Assistant</h4>
+        <a href="{% url 'admin:candidates_fahmy_assistant' %}" style="color: white; font-weight: bold;">Ask Fahmy to Find Candidates</a>
+        <p style="margin-top: 10px; font-size: 12px; opacity: 0.9;">Natural language candidate sorting</p>
     </div>
 </div>
 {% endblock %}

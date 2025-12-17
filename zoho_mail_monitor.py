@@ -19,24 +19,114 @@ logger = logging.getLogger(__name__)
 
 class ZohoMailMonitor:
     def __init__(self):
+        import os
+        import sys
+        
+        # Setup Django environment if not already set up
+        try:
+            import django
+            if 'DJANGO_SETTINGS_MODULE' not in os.environ:
+                os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'recruiter.settings')
+                # Add project root to path
+                project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+                if project_root not in sys.path:
+                    sys.path.insert(0, project_root)
+                django.setup()
+        except Exception as e:
+            # Django might already be configured, continue
+            pass
+        
         # Zoho Mail IMAP settings
         self.imap_server = "imap.zoho.com"
         self.imap_port = 993
         
-        # AI Recruiter email credentials
-        self.email_address = "fahmy@bit68.com"
-        self.email_password = "A2kK1rYB2Ns3"  # Your app password
+        # AI Recruiter email credentials from environment variables
+        self.email_address = os.environ.get('ZOHO_EMAIL', 'fahmy@bit68.com')
+        self.email_password = os.environ.get('ZOHO_EMAIL_PASSWORD', 'A2kK1rYB2Ns3')
         
-        # Django API endpoint (local, no ngrok)
-        # Use localhost when running outside Docker, web:8000 when inside Docker
-        import os
-        if os.environ.get('DOCKER_CONTAINER'):
+        # Django API endpoint
+        # Check if URL is explicitly set
+        if os.environ.get('DJANGO_API_URL'):
+            self.django_api_url = os.environ.get('DJANGO_API_URL')
+            self.fallback_url = None
+        # Try to detect the best URL based on environment
+        elif os.environ.get('DOCKER_CONTAINER') or os.path.exists('/.dockerenv'):
+            # Running in Docker - try web service first, fallback to host.docker.internal
             self.django_api_url = "http://web:8000/api/inbound/email/"
+            # On Linux, host.docker.internal might not work, so try 172.17.0.1 (default Docker bridge)
+            import platform
+            if platform.system() == 'Linux':
+                self.fallback_url = "http://172.17.0.1:8040/api/inbound/email/"
+            else:
+                self.fallback_url = "http://host.docker.internal:8040/api/inbound/email/"
         else:
+            # Running outside Docker
             self.django_api_url = "http://127.0.0.1:8040/api/inbound/email/"
+            self.fallback_url = None
         
         # Track processed emails
         self.processed_emails = set()
+        
+        # Test Django API connection on startup
+        self._test_django_connection()
+
+    def _test_django_connection(self):
+        """Test connection to Django API on startup"""
+        import time
+        import socket
+        
+        urls_to_try = [self.django_api_url]
+        if hasattr(self, 'fallback_url') and self.fallback_url:
+            urls_to_try.append(self.fallback_url)
+        
+        max_retries = 10
+        retry_delay = 3
+        
+        logger.info(f"🔍 Testing Django API connection...")
+        logger.info(f"📋 URLs to try: {urls_to_try}")
+        
+        for attempt in range(max_retries):
+            for url in urls_to_try:
+                try:
+                    # Extract host and port from URL
+                    from urllib.parse import urlparse
+                    parsed = urlparse(url)
+                    host = parsed.hostname
+                    port = parsed.port or (80 if parsed.scheme == 'http' else 443)
+                    
+                    # First try socket connection
+                    try:
+                        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                        sock.settimeout(2)
+                        result = sock.connect_ex((host, port))
+                        sock.close()
+                        if result != 0:
+                            logger.debug(f"⚠️ Socket connection to {host}:{port} failed")
+                            continue
+                    except Exception as sock_err:
+                        logger.debug(f"⚠️ Socket test error for {host}:{port}: {sock_err}")
+                        continue
+                    
+                    # Then try HTTP request
+                    test_url = url.replace('/api/inbound/email/', '/admin/')
+                    response = requests.get(test_url, timeout=5)
+                    if response.status_code in [200, 302, 404]:  # Any response means server is up
+                        logger.info(f"✅ Django API is accessible at {url}")
+                        self.django_api_url = url  # Use the working URL
+                        return True
+                except requests.exceptions.ConnectionError as e:
+                    logger.debug(f"⚠️ Attempt {attempt + 1}/{max_retries}: Cannot connect to {url}: {e}")
+                except Exception as e:
+                    logger.debug(f"⚠️ Attempt {attempt + 1}/{max_retries}: Error testing {url}: {str(e)}")
+            
+            if attempt < max_retries - 1:
+                logger.info(f"⏳ Waiting {retry_delay} seconds before retry ({attempt + 1}/{max_retries})...")
+                time.sleep(retry_delay)
+        
+        logger.warning(f"⚠️ Could not connect to Django API after {max_retries} attempts. Will continue trying during email processing...")
+        logger.info(f"💡 Tip: Make sure the web service is running and accessible")
+        logger.info(f"💡 Tip: Check if you can access http://web:8000/admin/ from another container")
+        return False
 
     def connect_to_mailbox(self):
         """Connect to Zoho Mail IMAP"""
@@ -104,29 +194,46 @@ class ZohoMailMonitor:
             return None
 
     def send_to_django_api(self, email_data):
-        """Send email data to Django API"""
-        try:
-            headers = {
-                'Content-Type': 'application/json',
-            }
-            
-            response = requests.post(
-                self.django_api_url,
-                json=email_data,
-                headers=headers,
-                timeout=30
-            )
-            
-            if response.status_code in [200, 201]:
-                logger.info("✅ Email sent to Django API successfully")
-                return True
-            else:
-                logger.error(f"❌ Django API error: {response.status_code} - {response.text}")
-                return False
+        """Send email data to Django API with fallback URL support"""
+        headers = {
+            'Content-Type': 'application/json',
+        }
+        
+        # Try primary URL first
+        urls_to_try = [self.django_api_url]
+        if hasattr(self, 'fallback_url') and self.fallback_url:
+            urls_to_try.append(self.fallback_url)
+        
+        for url in urls_to_try:
+            try:
+                logger.info(f"🔗 Attempting to connect to: {url}")
+                response = requests.post(
+                    url,
+                    json=email_data,
+                    headers=headers,
+                    timeout=10
+                )
                 
-        except Exception as e:
-            logger.error(f"❌ Error sending to Django API: {str(e)}")
-            return False
+                if response.status_code in [200, 201]:
+                    logger.info(f"✅ Email sent to Django API successfully at {url}")
+                    return True
+                else:
+                    logger.warning(f"⚠️ Django API returned {response.status_code} at {url}: {response.text}")
+                    # Continue to next URL if available
+                    continue
+                    
+            except requests.exceptions.ConnectionError as e:
+                logger.warning(f"⚠️ Connection failed to {url}: {str(e)}")
+                # Try next URL if available
+                continue
+            except Exception as e:
+                logger.warning(f"⚠️ Error sending to {url}: {str(e)}")
+                # Try next URL if available
+                continue
+        
+        # All URLs failed
+        logger.error(f"❌ Failed to send email to Django API after trying {len(urls_to_try)} URL(s)")
+        return False
 
     def mark_email_as_read(self, mail, email_id):
         """Mark email as read"""
@@ -217,17 +324,23 @@ class ZohoMailMonitor:
             except:
                 pass
 
-    def run_continuous_monitoring(self, interval_minutes=5):
+    def run_continuous_monitoring(self, interval_minutes=1):
         """Run continuous email monitoring"""
-        logger.info(f"🚀 Starting Zoho Mail monitoring every {interval_minutes} minutes")
+        logger.info(f"🚀 Starting Zoho Mail monitoring every {interval_minutes} minute(s)")
         logger.info(f"📧 Monitoring: {self.email_address}")
         logger.info(f"🔗 Django API: {self.django_api_url}")
         
         while True:
             try:
+                # Process "Open Vacancy" emails
                 processed = self.process_vacancy_emails()
                 if processed > 0:
-                    logger.info(f"📬 Processed {processed} new emails")
+                    logger.info(f"📬 Processed {processed} new vacancy emails")
+                
+                # Process "Posted" replies from HR
+                posted_count = self.process_hr_posted_replies_once()
+                if posted_count > 0:
+                    logger.info(f"📬 Processed {posted_count} 'Posted' reply emails")
                 
                 # Wait for next check
                 time.sleep(interval_minutes * 60)
@@ -364,7 +477,8 @@ class ZohoMailMonitor:
         Search for manager feedback reply emails
         """
         try:
-            # Search for emails with 'Re:' in subject and from manager emails
+            # Search for emails with 'Re:' in subject containing "Feedback Request"
+            # This will match both read and unread emails
             search_criteria = '(SUBJECT "Re: Feedback Request")'
             status, messages = mail.search(None, search_criteria)
             
@@ -372,9 +486,13 @@ class ZohoMailMonitor:
                 print(f"❌ Error searching feedback emails: {messages}")
                 return []
             
-            return messages[0].split() if messages[0] else []
+            email_ids = messages[0].split() if messages[0] else []
+            print(f"🔍 Found {len(email_ids)} emails matching 'Re: Feedback Request'")
+            return email_ids
         except Exception as e:
             print(f"❌ Error in search_manager_feedback_emails: {e}")
+            import traceback
+            traceback.print_exc()
             return []
 
     def process_manager_feedback_emails_once(self):
@@ -405,7 +523,8 @@ class ZohoMailMonitor:
                     try:
                         # Fetch email content
                         status, msg_data = mail.fetch(msg_id, '(RFC822)')
-                        if status != 'OK' or not msg_data:
+                        if status != 'OK' or not msg_data or not msg_data[0] or not msg_data[0][1]:
+                            print(f"⚠️ Could not fetch email {msg_id}")
                             continue
                         
                         # Parse email
@@ -413,22 +532,39 @@ class ZohoMailMonitor:
                         subject = email_message.get('Subject', '')
                         from_email = email_message.get('From', '')
                         
+                        print(f"📧 Processing feedback email: Subject='{subject[:100]}', From='{from_email}'")
+                        
                         # Get email body
                         body = self._get_email_body(email_message)
+                        if not body:
+                            print(f"⚠️ No body found in email {msg_id}")
+                            continue
+                        
+                        print(f"📄 Email body length: {len(body)} characters")
                         
                         # Extract candidate name from subject or body
                         candidate_name = self._extract_candidate_name_from_feedback(subject, body)
                         if not candidate_name:
+                            print(f"⚠️ Could not extract candidate name from email {msg_id}")
                             continue
                         
                         # Find corresponding interview
                         interview = parser.find_interview_by_candidate_name(candidate_name)
                         if not interview:
                             print(f"⚠️ No interview found for candidate: {candidate_name}")
+                            # Try to find by partial match or show available candidates
+                            from interviews.models import Interview
+                            recent_interviews = Interview.objects.filter(
+                                scheduled_at__gte=timezone.now() - timedelta(days=30)
+                            ).select_related('candidate', 'vacancy')[:10]
+                            print(f"   Recent interviews: {[(i.candidate.full_name, i.vacancy.title) for i in recent_interviews]}")
                             continue
+                        
+                        print(f"✅ Found interview for {candidate_name} - {interview.vacancy.title}")
                         
                         # Parse feedback data
                         parsed_data = parser.parse_feedback_email(subject, body)
+                        print(f"📊 Parsed feedback - Rating: {parsed_data['rating']}, Recommended: {parsed_data['recommended']}, Text length: {len(parsed_data['feedback_text'])}")
                         
                         # Save feedback
                         feedback = parser.save_manager_feedback(interview, parsed_data)
@@ -438,6 +574,8 @@ class ZohoMailMonitor:
                         
                     except Exception as e:
                         print(f"❌ Error processing feedback email {msg_id}: {e}")
+                        import traceback
+                        traceback.print_exc()
                         continue
                 
                 return processed_count
@@ -458,23 +596,37 @@ class ZohoMailMonitor:
         Extract candidate name from feedback email subject or body
         """
         # Look for patterns like "Re: Feedback Request: Vacancy - John Doe"
+        # The subject format is: "Re: Feedback Request: {vacancy.title} - {candidate_name}"
         patterns = [
-            r'Re:\s*Feedback Request:\s*[^-]+\s*-\s*(.+)',
+            r'Re:\s*Feedback Request:\s*[^-]+\s*-\s*(.+?)(?:\s*$|\s*\[|\s*\(|\s*<)',  # More specific pattern
+            r'Re:\s*Feedback Request:\s*[^-]+\s*-\s*(.+)',  # Original pattern
+            r'Feedback Request:\s*[^-]+\s*-\s*(.+)',  # Without "Re:"
             r'Feedback for\s*(.+)',
             r'Interview with\s*(.+)',
         ]
         
+        # Try subject first
         for pattern in patterns:
             match = re.search(pattern, subject, re.IGNORECASE)
             if match:
-                return match.group(1).strip()
+                candidate_name = match.group(1).strip()
+                # Clean up any trailing characters
+                candidate_name = re.sub(r'[\s\[\]()<>]+$', '', candidate_name)
+                if candidate_name:
+                    print(f"📝 Extracted candidate name from subject: '{candidate_name}'")
+                    return candidate_name
         
         # If not found in subject, try body
         for pattern in patterns:
             match = re.search(pattern, body, re.IGNORECASE)
             if match:
-                return match.group(1).strip()
+                candidate_name = match.group(1).strip()
+                candidate_name = re.sub(r'[\s\[\]()<>]+$', '', candidate_name)
+                if candidate_name:
+                    print(f"📝 Extracted candidate name from body: '{candidate_name}'")
+                    return candidate_name
         
+        print(f"⚠️ Could not extract candidate name from subject: '{subject[:100]}'")
         return None
 
     def _get_email_body(self, email_message):

@@ -377,7 +377,7 @@ Time: {interview.scheduled_at.strftime('%H:%M')} - {(interview.scheduled_at + ti
 Duration: {interview.duration_minutes} minutes
 
 Best regards,
-AI Recruiting System
+Fahmy
                 """.strip()
                 
                 send_mail(

@@ -100,6 +100,8 @@ class CandidateVacancyProfile(models.Model):
         help_text='Whether manager recommends this candidate'
     )
     feedback_received_date = models.DateTimeField(null=True, blank=True, help_text='When manager feedback was received')
+    recommendation_email_sent = models.BooleanField(default=False, help_text='Whether hiring recommendation email has been sent')
+    recommendation_email_sent_at = models.DateTimeField(null=True, blank=True, help_text='When hiring recommendation email was sent')
     
     # Questionnaire response information
     questionnaire_response = models.TextField(blank=True, help_text='Candidate questionnaire response (full email body)')

@@ -16,6 +16,8 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from django.conf import settings
+from django.conf.urls.static import static
 from rest_framework.routers import DefaultRouter
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
@@ -71,4 +73,8 @@ urlpatterns = [
     path('admin/calendar/discover/', DiscoverCalendarView.as_view(), name='discover_calendar'),
     # OAuth endpoints removed (switching to CalDAV-only read access)
 ]
+
+# Serve static files in development
+if settings.DEBUG:
+    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
 

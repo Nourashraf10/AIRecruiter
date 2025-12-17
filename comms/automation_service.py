@@ -122,7 +122,7 @@ class AutomatedInterviewScheduler:
             message = f"""
 Dear {manager.get_full_name() or manager.username},
 
-Your calendar has been successfully integrated with the AI Recruiting System.
+Your calendar has been successfully integrated with our recruiting system.
 
 Calendar Details:
 - Email: {manager.email}
@@ -141,7 +141,7 @@ You will receive notifications when:
 - Interview feedback is required
 
 Best regards,
-AI Recruiting System
+Fahmy
 fahmy@bit68.com
             """.strip()
             
@@ -294,7 +294,7 @@ Next Steps:
 4. Provide feedback after each interview
 
 Best regards,
-AI Recruiting System
+Fahmy
 fahmy@bit68.com
             """.strip()
             
@@ -373,7 +373,7 @@ Please ensure you have:
 - Set up your meeting room/link
 
 Best regards,
-AI Recruiting System
+Fahmy
             """.strip()
             
             send_mail(
@@ -661,7 +661,7 @@ Duration: {interview.duration_minutes} minutes
 Please prepare for these interviews and ensure you're available at the scheduled times.
 
 Best regards,
-AI Recruiting System
+Fahmy
 fahmy@bit68.com
             """.strip()
             

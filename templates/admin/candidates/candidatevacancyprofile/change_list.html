@@ -1,0 +1,13 @@
+{% extends "admin/change_list.html" %}
+{% load i18n admin_urls static %}
+
+{% block object-tools-items %}
+{{ block.super }}
+<li>
+    <a href="{% url 'admin:candidates_fahmy_assistant' %}" class="addlink" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 10px 15px; border-radius: 5px; text-decoration: none; font-weight: bold;">
+        🤖 Fahmy AI Assistant
+    </a>
+</li>
+{% endblock %}
+
+

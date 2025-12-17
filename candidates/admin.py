@@ -1,13 +1,16 @@
 from django.contrib import admin
 from django.shortcuts import render, redirect
 from django.contrib import messages
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, JsonResponse
 from django.urls import path, reverse
 from django import forms
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
 from .models import Candidate, CV, Application, QuestionnaireResponse, CandidateProfile, CandidateVacancyProfile
 from vacancies.models import Vacancy
 from ai.services import AIService
 from django.db import transaction
+from .ai_sorting_service import CandidateSortingAIService
 
 
 class CVUploadForm(forms.Form):
@@ -238,7 +241,7 @@ class CandidateProfileAdmin(admin.ModelAdmin):
 class CandidateVacancyProfileAdmin(admin.ModelAdmin):
     list_display = (
         'candidate', 'vacancy', 'application_status', 'ai_score', 
-        'manager_rating', 'manager_recommendation', 'interview_scheduled', 'created_at'
+        'manager_rating', 'manager_recommendation', 'recommendation_email_sent', 'interview_scheduled', 'created_at'
     )
     list_filter = (
         'application_status', 'manager_rating', 'manager_recommendation', 
@@ -249,8 +252,14 @@ class CandidateVacancyProfileAdmin(admin.ModelAdmin):
         'manager_feedback', 'ai_analysis'
     )
     readonly_fields = (
-        'created_at', 'updated_at', 'ai_analysis_date', 'feedback_received_date'
+        'created_at', 'updated_at', 'ai_analysis_date', 'feedback_received_date',
+        'recommendation_email_sent', 'recommendation_email_sent_at'
     )
+    
+    def changelist_view(self, request, extra_context=None):
+        extra_context = extra_context or {}
+        extra_context['fahmy_assistant_url'] = reverse('admin:candidates_fahmy_assistant')
+        return super().changelist_view(request, extra_context)
     
     fieldsets = (
         ('Candidate & Vacancy', {
@@ -272,7 +281,7 @@ class CandidateVacancyProfileAdmin(admin.ModelAdmin):
         ('Manager Feedback', {
             'fields': (
                 'manager_feedback', 'manager_rating', 'manager_recommendation', 
-                'feedback_received_date'
+                'feedback_received_date', 'recommendation_email_sent', 'recommendation_email_sent_at'
             )
         }),
         ('Questionnaire Response', {
@@ -288,3 +297,63 @@ class CandidateVacancyProfileAdmin(admin.ModelAdmin):
     
     def get_queryset(self, request):
         return super().get_queryset(request).select_related('candidate', 'vacancy')
+    
+    def get_urls(self):
+        urls = super().get_urls()
+        custom_urls = [
+            path('fahmy-assistant/', self.admin_site.admin_view(self.fahmy_assistant_view), name='candidates_fahmy_assistant'),
+        ]
+        return custom_urls + urls
+    
+    def fahmy_assistant_view(self, request):
+        """
+        Fahmy AI Assistant view for natural language candidate sorting
+        """
+        ai_service = CandidateSortingAIService()
+        candidates = []
+        query = request.GET.get('query', '')
+        vacancy_id = request.GET.get('vacancy_id', '')
+        filters_applied = {}
+        explanation = ''
+        
+        if request.method == 'POST':
+            query = request.POST.get('query', '')
+            vacancy_id = request.POST.get('vacancy_id', '')
+            
+            if query:
+                # Parse the query using AI
+                parsed_result = ai_service.parse_query(query)
+                
+                if 'error' in parsed_result:
+                    messages.error(request, f"Error: {parsed_result['error']}")
+                else:
+                    # Apply filters
+                    filters = parsed_result.get('filters', {})
+                    filters_applied = filters
+                    explanation = parsed_result.get('explanation', '')
+                    
+                    # Get vacancy ID if provided
+                    vac_id = int(vacancy_id) if vacancy_id and vacancy_id.isdigit() else None
+                    
+                    # Apply filters and get candidates
+                    candidates_qs = ai_service.apply_filters(filters, vac_id)
+                    candidates = list(candidates_qs[:100])  # Limit to 100 results
+                    
+                    messages.success(request, f"Found {len(candidates)} candidates matching your criteria.")
+        
+        # Get all vacancies for the dropdown
+        vacancies = Vacancy.objects.all().order_by('-created_at')
+        
+        context = {
+            'title': 'Fahmy AI Assistant - Candidate Sorting',
+            'query': query,
+            'vacancy_id': vacancy_id,
+            'candidates': candidates,
+            'vacancies': vacancies,
+            'filters_applied': filters_applied,
+            'explanation': explanation,
+            'has_permission': True,
+            'opts': CandidateVacancyProfile._meta,
+        }
+        
+        return render(request, 'admin/candidates/fahmy_assistant.html', context)

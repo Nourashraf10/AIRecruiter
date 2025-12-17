@@ -239,8 +239,13 @@ class InboundEmailView(APIView):
 
     def _send_approval_email(self, vacancy, manager, approval_token):
         """Send approval email to manager"""
+        import logging
+        logger = logging.getLogger(__name__)
+        
         # Use local URL with a simple landing page containing nice buttons
-        base_url = "http://localhost:8040"
+        # Get base URL from settings or environment
+        import os
+        base_url = os.environ.get('DJANGO_BASE_URL', 'http://localhost:8040')
         approval_url = f"{base_url}/approve/{approval_token}/"
         
         email_body = f"""
@@ -256,7 +261,7 @@ Please review and approve/reject using the following link:
 {approval_url}
 
 Best regards,
-AI Recruiting System
+Fahmy
 fahmy@bit68.com
         """.strip()
 
@@ -272,7 +277,13 @@ fahmy@bit68.com
         try:
             from django.core.mail import send_mail
             # Check if email credentials are configured
-            if settings.EMAIL_HOST_USER and settings.EMAIL_HOST_PASSWORD and settings.EMAIL_HOST_USER.strip():
+            email_user = settings.EMAIL_HOST_USER
+            email_password = settings.EMAIL_HOST_PASSWORD
+            
+            logger.info(f"📧 Attempting to send approval email to: {manager.email}")
+            logger.info(f"📧 Email config - Host: {settings.EMAIL_HOST}, User: {email_user}, Password set: {bool(email_password)}")
+            
+            if email_user and email_password and email_user.strip():
                 # Send HTML email with nicer link
                 from django.core.mail import EmailMultiAlternatives
                 text_content = email_body
@@ -285,8 +296,8 @@ fahmy@bit68.com
                 <p>
                   <a href=\"{approval_url}\" style=\"display:inline-block;padding:12px 18px;background:#007cba;color:#fff;border-radius:8px;text-decoration:none;font-weight:600;\">Review & Approve</a>
                 </p>
-                <p style=\"color:#6b7280;font-size:12px\">If the button doesn’t work, copy this URL: {approval_url}</p>
-                <p>Best regards,<br/>AI Recruiting System</p>
+                <p style=\"color:#6b7280;font-size:12px\">If the button doesn't work, copy this URL: {approval_url}</p>
+                <p>Best regards,<br/>Fahmy</p>
                 """.strip()
 
                 msg = EmailMultiAlternatives(
@@ -299,15 +310,22 @@ fahmy@bit68.com
                 msg.send(fail_silently=False)
                 outgoing_email.sent_at = timezone.now()
                 outgoing_email.save(update_fields=['sent_at'])
+                logger.info(f"✅ Approval email sent successfully to: {manager.email}")
                 print(f"✅ Approval email sent to: {manager.email}")
             else:
-                print(f"⚠️  Email credentials not configured. Email would be sent to: {manager.email}")
+                error_msg = f"⚠️ Email credentials not configured. EMAIL_HOST_USER: {bool(email_user)}, EMAIL_HOST_PASSWORD: {bool(email_password)}"
+                logger.warning(error_msg)
+                print(error_msg)
                 print(f"EMAIL TO SEND:")
                 print(f"To: {manager.email}")
                 print(f"Subject: {outgoing_email.subject}")
                 print(f"Body: {email_body}")
         except Exception as e:
-            print(f"❌ Failed to send email to {manager.email}: {str(e)}")
+            error_msg = f"❌ Failed to send email to {manager.email}: {str(e)}"
+            logger.error(error_msg, exc_info=True)
+            print(error_msg)
+            import traceback
+            traceback.print_exc()
             # Still log the email for debugging
             print(f"EMAIL TO SEND:")
             print(f"To: {manager.email}")
@@ -593,7 +611,7 @@ Please post this vacancy on LinkedIn to start collecting applications.
 Kindly reply with "Posted" to confirm posting. if you still didn't post it , don't reply.
 
 Best regards,
-AI Recruiter System
+Fahmy
 """
 
                 # Send as HTML email to bold the instruction line
@@ -610,7 +628,7 @@ AI Recruiter System
                 </ul>
                 <p>Please post this vacancy on LinkedIn to start collecting applications.</p>
                 <p><strong>Kindly reply with "Posted" to confirm posting. if you still didn't post it , don't reply.</strong></p>
-                <p>Best regards,<br/>AI Recruiter System</p>
+                <p>Best regards,<br/>Fahmy</p>
                 """
                 email = EmailMultiAlternatives(
                     subject=subject,
