@@ -74,7 +74,7 @@ services:
       # Zoho OAuth Configuration
       ZOHO_CLIENT_ID: ${ZOHO_CLIENT_ID}
       ZOHO_CLIENT_SECRET: ${ZOHO_CLIENT_SECRET}
-      ZOHO_REDIRECT_URI: "http://localhost:8040/api/oauth/callback/"
+      ZOHO_REDIRECT_URI: ${ZOHO_REDIRECT_URI}
 
   celeryworker:
     <<: *web
