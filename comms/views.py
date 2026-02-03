@@ -97,12 +97,22 @@ class InboundEmailView(APIView):
         # Parse email body for vacancy details
         payload = self._parse_vacancy_email(body)
         
-        # Create or get the user who sent the email
-        created_by = User.objects.filter(email=from_addr).first()
+        # Require a real title: reject default "New Vacancy" to avoid spam from repeated/malformed emails
+        if not payload.get('title') or (payload['title'] or '').strip() == '' or payload['title'].strip().lower() == 'new vacancy':
+            incoming.processed = True
+            incoming.save(update_fields=['processed'])
+            return Response({
+                "detail": "Skipped: body must include 'Title: <job title>' (e.g. Title: Senior Developer). No vacancy created.",
+                "incoming_email_id": incoming.id,
+            }, status=status.HTTP_200_OK)
+        
+        # Create or get the user who sent the email (use clean email in case of "Name <email>" format)
+        sender_email = _extract_clean_email(from_addr)
+        created_by = User.objects.filter(email=sender_email).first()
         if not created_by:
             created_by = User.objects.create(
-                email=from_addr,
-                username=from_addr.split('@')[0]
+                email=sender_email,
+                username=sender_email.split('@')[0]
             )
 
         # Manager must exist or be created as minimal user
@@ -250,6 +260,7 @@ class InboundEmailView(APIView):
         import os
         base_url = os.environ.get('DJANGO_BASE_URL', 'http://localhost:8040')
         approval_url = f"{base_url}/approve/{approval_token}/"
+        recruiter_email = getattr(settings, 'AI_RECRUITER_EMAIL', settings.DEFAULT_FROM_EMAIL) or ''
         
         email_body = f"""
 Dear {manager.get_full_name() or manager.username},
@@ -266,7 +277,7 @@ Please review and approve/reject using the following link:
 Best regards,
 Fahmy
 {recruiter_email}
-        """.strip().format(recruiter_email=getattr(settings, 'AI_RECRUITER_EMAIL', settings.DEFAULT_FROM_EMAIL))
+        """.strip()
 
         # Store outgoing email record
         outgoing_email = OutgoingEmail.objects.create(

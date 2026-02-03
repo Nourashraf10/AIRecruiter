@@ -34,15 +34,23 @@ class DailyAutomationService:
             
             # Get all vacancies in 'collecting_applications' status
             collecting_vacancies = Vacancy.objects.filter(status='collecting_applications')
-            logger.info(f"📋 Found {collecting_vacancies.count()} vacancies in 'collecting_applications' status")
+            vac_count = collecting_vacancies.count()
+            logger.info(f"📋 Found {vac_count} vacancy(ies) in 'collecting_applications' status")
             
-            if collecting_vacancies.count() == 0:
-                logger.info("ℹ️ No vacancies in 'collecting_applications' status to process")
+            if vac_count == 0:
+                logger.info("ℹ️ No vacancies in 'collecting_applications' status — nothing to process. Move vacancies to this status and ensure shortlists exist.")
                 return {
                     'success': True,
                     'message': 'No vacancies in collecting_applications status to process',
                     'processed_vacancies': 0,
-                    'total_emails_sent': 0
+                    'total_emails_sent': 0,
+                    'summary': {
+                        'vacancies_checked': 0,
+                        'vacancies_processed': 0,
+                        'total_emails_sent': 0,
+                        'reason': 'no_vacancies_collecting_applications',
+                        'timestamp': timezone.now().isoformat()
+                    }
                 }
             
             total_emails_sent = 0
@@ -52,13 +60,13 @@ class DailyAutomationService:
             for vacancy in collecting_vacancies:
                 logger.info(f"📝 Processing vacancy: {vacancy.title} (ID: {vacancy.id})")
                 
-                # Get all eligible candidates for this vacancy
+                # Get all eligible candidates for this vacancy (shortlisted and not already scheduled)
                 eligible_candidates = self._get_eligible_candidates(vacancy)
                 if not eligible_candidates:
-                    logger.info(f"ℹ️ No eligible shortlisted candidates found for vacancy {vacancy.title}")
+                    logger.warning(f"⚠️ No eligible shortlisted candidates for {vacancy.title} — add a shortlist (Admin > Vacancy > Generate shortlist) and ensure candidates are not already scheduled.")
                     continue
 
-                logger.info(f"📋 Found {len(eligible_candidates)} eligible candidates for {vacancy.title}")
+                logger.info(f"📋 Found {len(eligible_candidates)} eligible candidate(s) for {vacancy.title}")
                 
                 # Track used slots for this manager to avoid conflicts
                 used_slots = set()
@@ -69,7 +77,7 @@ class DailyAutomationService:
                     # Find a free slot on manager calendar (next 7 days, 60 minutes)
                     slot = self._find_manager_free_slot(vacancy, used_slots)
                     if not slot:
-                        logger.warning(f"⚠️ No available calendar slot found for manager {vacancy.manager.email} (vacancy {vacancy.title})")
+                        logger.warning(f"⚠️ No available calendar slot for manager {vacancy.manager.email} (vacancy {vacancy.title}). Check CalDAV/Calendar integration for this manager.")
                         break
 
                     # Create InterviewSlot and Interview, then notify
@@ -82,11 +90,13 @@ class DailyAutomationService:
                         total_emails_sent += scheduling_result.get('emails_sent', 0)
                         logger.info(f"✅ Scheduled interview and sent notifications for {vacancy.title} - {candidate.full_name}")
                     else:
-                        logger.error(f"❌ Failed scheduling/notifications: {scheduling_result.get('error')}")
+                        logger.error(f"❌ Failed scheduling/notifications for {candidate.full_name}: {scheduling_result.get('error')}")
                 
                 if vacancy_processed:
                     processed_vacancies += 1
             
+            if total_emails_sent == 0:
+                logger.warning("⚠️ Daily interview scheduling finished with 0 emails sent. Check: vacancies in 'collecting_applications', shortlists exist, manager calendar has slots, and EMAIL_* settings.")
             logger.info(f"🎉 Daily interview scheduling completed: {processed_vacancies} vacancies processed, {total_emails_sent} emails sent")
             
             return {
@@ -169,7 +179,7 @@ class DailyAutomationService:
         end_date = start_date + timedelta(days=7)
         calendar = ZohoCalendarService(manager_email=vacancy.manager.email)
         slots = calendar.get_available_slots(start_date, end_date, duration_minutes=60, manager_email=vacancy.manager.email)
-        
+        logger.info(f"Calendar returned {len(slots) if slots else 0} slot(s) for manager {vacancy.manager.email} ({start_date.date()} to {end_date.date()})")
         if slots:
             # Find the first slot that hasn't been used yet
             for s in slots:

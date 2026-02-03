@@ -22,6 +22,8 @@ class ZohoMailMonitor:
         import os
         import sys
         
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        
         # Setup Django environment if not already set up
         try:
             import django
@@ -35,6 +37,48 @@ class ZohoMailMonitor:
         except Exception as e:
             # Django might already be configured, continue
             pass
+        
+        # Load Zoho credentials from .env if not in environment (e.g. when running locally)
+        if not os.environ.get('ZOHO_EMAIL') or not os.environ.get('ZOHO_EMAIL_PASSWORD'):
+            # Try to load from .env: first in project root (same dir as this script), then parent, then cwd
+            for candidate in [
+                os.path.join(script_dir, '.env'),
+                os.path.join(os.path.dirname(script_dir), '.env'),
+                os.path.join(os.getcwd(), '.env'),
+            ]:
+                if os.path.isfile(candidate):
+                    env_file = candidate
+                    break
+            else:
+                env_file = None
+            
+            if env_file and os.path.exists(env_file):
+                try:
+                    with open(env_file, 'r') as f:
+                        for line in f:
+                            line = line.strip()
+                            if line and not line.startswith('#') and '=' in line:
+                                key, value = line.split('=', 1)
+                                key = key.strip()
+                                value = value.strip().strip('"').strip("'")
+                                if key == 'ZOHO_EMAIL' and not os.environ.get('ZOHO_EMAIL'):
+                                    os.environ['ZOHO_EMAIL'] = value
+                                elif key == 'ZOHO_EMAIL_PASSWORD' and not os.environ.get('ZOHO_EMAIL_PASSWORD'):
+                                    os.environ['ZOHO_EMAIL_PASSWORD'] = value
+                except Exception as e:
+                    logger.warning(f"Could not load Zoho credentials from .env file: {e}")
+            else:
+                # Fallback: try decouple if available
+                try:
+                    from decouple import config
+                    zoho_email = config('ZOHO_EMAIL', default='')
+                    zoho_password = config('ZOHO_EMAIL_PASSWORD', default='')
+                    if zoho_email:
+                        os.environ['ZOHO_EMAIL'] = zoho_email
+                    if zoho_password:
+                        os.environ['ZOHO_EMAIL_PASSWORD'] = zoho_password
+                except ImportError:
+                    pass
         
         # Zoho Mail IMAP settings
         self.imap_server = "imap.zoho.com"
@@ -67,8 +111,13 @@ class ZohoMailMonitor:
             self.django_api_url = "http://127.0.0.1:8040/api/inbound/email/"
             self.fallback_url = None
         
-        # Track processed emails
-        self.processed_emails = set()
+        # Track processed emails by IMAP UID (stable across sessions); persist to file so restarts don't reprocess
+        self._processed_uids_file = os.path.join(script_dir, '.zoho_processed_vacancy_uids.txt')
+        self.processed_emails = self._load_processed_uids_from_file(self._processed_uids_file)
+        self._processed_linkedin_uids_file = os.path.join(script_dir, '.zoho_processed_linkedin_uids.txt')
+        self.processed_linkedin_uids = self._load_processed_uids_from_file(self._processed_linkedin_uids_file)
+        self._processed_feedback_uids_file = os.path.join(script_dir, '.zoho_processed_feedback_uids.txt')
+        self.processed_feedback_uids = self._load_processed_uids_from_file(self._processed_feedback_uids_file)
         
         # Test Django API connection on startup
         self._test_django_connection()
@@ -131,6 +180,46 @@ class ZohoMailMonitor:
         logger.info(f"💡 Tip: Check if you can access http://web:8000/admin/ from another container")
         return False
 
+    def _load_processed_uids_from_file(self, path, max_uids=2000):
+        """Load set of already-processed UIDs from file (so restarts don't reprocess)."""
+        import os
+        uids = set()
+        if not path or not os.path.exists(path):
+            return uids
+        try:
+            with open(path, 'r') as f:
+                for line in f:
+                    uid = line.strip()
+                    if uid.isdigit():
+                        uids.add(uid)
+            if uids:
+                logger.info(f"Loaded {len(uids)} previously processed UID(s) from {os.path.basename(path)}")
+        except Exception as e:
+            logger.warning(f"Could not load processed UIDs file: {e}")
+        return uids
+
+    def _save_processed_uid(self, uid_str, max_uids=2000):
+        """Append one UID to the vacancy processed file; trim file if too long."""
+        self._save_processed_uid_to_file(uid_str, getattr(self, '_processed_uids_file', None), max_uids)
+
+    def _save_processed_uid_to_file(self, uid_str, path, max_uids=2000):
+        """Append one UID to a processed-UIDs file; trim file if too long."""
+        import os
+        if not path:
+            return
+        try:
+            with open(path, 'a') as f:
+                f.write(uid_str + '\n')
+                f.flush()
+            if os.path.exists(path):
+                with open(path, 'r') as f:
+                    lines = f.readlines()
+                if len(lines) > max_uids:
+                    with open(path, 'w') as f:
+                        f.writelines(lines[-max_uids:])
+        except Exception as e:
+            logger.warning(f"Could not save processed UID to file: {e}")
+
     def connect_to_mailbox(self):
         """Connect to Zoho Mail IMAP"""
         try:
@@ -144,54 +233,85 @@ class ZohoMailMonitor:
             return None
 
     def search_vacancy_emails(self, mail):
-        """Search for emails with 'Open Vacancy' subject"""
+        """Search for unread emails with 'Open Vacancy' in subject (case-insensitive).
+        Uses IMAP UID so we track by stable id; only UNSEEN so each email is processed once.
+        """
         try:
-            # Search for unread emails with 'Open Vacancy' in subject
-            search_criteria = '(UNSEEN SUBJECT "Open Vacancy")'
-            status, messages = mail.search(None, search_criteria)
-            
-            if status == 'OK':
-                email_ids = messages[0].split()
-                logger.info(f"Found {len(email_ids)} unread 'Open Vacancy' emails")
-                return email_ids
-            else:
+            # Only unread emails (UNSEEN); use UID for stable ids
+            status, messages = mail.uid('SEARCH', None, 'UNSEEN')
+            if status != 'OK':
                 logger.error("Failed to search emails")
                 return []
+            
+            uids = messages[0].split()
+            if not uids:
+                logger.info("Found 0 unread emails in INBOX")
+                return []
+            
+            # Filter by subject containing "open vacancy" (case-insensitive)
+            vacancy_key = "open vacancy"
+            matched = []
+            for uid in uids:
+                uid_str = uid.decode('utf-8') if isinstance(uid, bytes) else str(uid)
+                try:
+                    status, msg_data = mail.uid('FETCH', uid_str, '(BODY.PEEK[HEADER.FIELDS (SUBJECT)])')
+                    if status != 'OK' or not msg_data:
+                        continue
+                    raw = None
+                    for part in msg_data:
+                        if isinstance(part, tuple) and len(part) == 2:
+                            raw = part[1]
+                            break
+                        if isinstance(part, bytes) and b'Subject:' in part:
+                            raw = part
+                            break
+                    if raw is None:
+                        continue
+                    if isinstance(raw, bytes):
+                        raw = raw.decode('utf-8', errors='ignore')
+                    if vacancy_key in raw.lower():
+                        matched.append(uid_str)
+                except Exception:
+                    continue
+            
+            logger.info(f"Found {len(matched)} unread 'Open Vacancy' email(s)")
+            return matched
         except Exception as e:
             logger.error(f"Error searching emails: {str(e)}")
             return []
 
-    def get_email_content(self, mail, email_id):
-        """Get email content by ID"""
+    def get_email_content(self, mail, uid_str):
+        """Get email content by IMAP UID (string)."""
         try:
-            status, msg_data = mail.fetch(email_id, '(RFC822)')
-            if status == 'OK':
-                email_body = msg_data[0][1]
-                email_message = email.message_from_bytes(email_body)
-                
-                # Extract email details
-                from_address = email_message.get('From', '')
-                subject = email_message.get('Subject', '')
-                
-                # Get email body
-                body = ""
-                if email_message.is_multipart():
-                    for part in email_message.walk():
-                        if part.get_content_type() == "text/plain":
-                            body = part.get_payload(decode=True).decode('utf-8', errors='ignore')
-                            break
-                else:
-                    body = email_message.get_payload(decode=True).decode('utf-8', errors='ignore')
-                
-                return {
-                    'from_address': from_address,
-                    'subject': subject,
-                    'body': body,
-                    'email_id': email_id.decode('utf-8')
-                }
-            else:
-                logger.error(f"Failed to fetch email {email_id}")
+            status, msg_data = mail.uid('FETCH', uid_str, '(RFC822)')
+            if status != 'OK' or not msg_data or not msg_data[0]:
                 return None
+            # msg_data[0] can be (b'1 (UID 123 RFC822 {size}', b'...body...') or tuple with body in [1]
+            part = msg_data[0]
+            if isinstance(part, tuple) and len(part) >= 2:
+                email_body = part[1]
+            else:
+                return None
+            email_message = email.message_from_bytes(email_body)
+            
+            from_address = email_message.get('From', '')
+            subject = email_message.get('Subject', '')
+            
+            body = ""
+            if email_message.is_multipart():
+                for p in email_message.walk():
+                    if p.get_content_type() == "text/plain":
+                        body = p.get_payload(decode=True).decode('utf-8', errors='ignore')
+                        break
+            else:
+                body = email_message.get_payload(decode=True).decode('utf-8', errors='ignore')
+            
+            return {
+                'from_address': from_address,
+                'subject': subject,
+                'body': body,
+                'email_id': str(uid_str)
+            }
         except Exception as e:
             logger.error(f"Error getting email content: {str(e)}")
             return None
@@ -238,11 +358,11 @@ class ZohoMailMonitor:
         logger.error(f"❌ Failed to send email to Django API after trying {len(urls_to_try)} URL(s)")
         return False
 
-    def mark_email_as_read(self, mail, email_id):
-        """Mark email as read"""
+    def mark_email_as_read(self, mail, uid_str):
+        """Mark email as read by IMAP UID."""
         try:
-            mail.store(email_id, '+FLAGS', '\\Seen')
-            logger.info(f"✅ Marked email {email_id} as read")
+            mail.uid('STORE', uid_str, '+FLAGS', '\\Seen')
+            logger.info(f"✅ Marked email (UID {uid_str}) as read")
         except Exception as e:
             logger.error(f"❌ Failed to mark email as read: {str(e)}")
 
@@ -253,17 +373,17 @@ class ZohoMailMonitor:
             return 0
         
         try:
-            # Search for new vacancy emails
-            email_ids = self.search_vacancy_emails(mail)
+            # Search for unread "Open Vacancy" emails (returns list of UID strings)
+            uid_list = self.search_vacancy_emails(mail)
             processed_count = 0
             
-            for email_id in email_ids:
-                # Skip if already processed
-                if email_id.decode('utf-8') in self.processed_emails:
+            for uid_str in uid_list:
+                # Skip if already processed (in-memory or from file)
+                if uid_str in self.processed_emails:
                     continue
                 
-                # Get email content
-                email_data = self.get_email_content(mail, email_id)
+                # Get email content by UID
+                email_data = self.get_email_content(mail, uid_str)
                 if not email_data:
                     continue
                 
@@ -273,9 +393,10 @@ class ZohoMailMonitor:
                 # Send to Django API
                 success = self.send_to_django_api(email_data)
                 if success:
-                    # Mark as read and track as processed
-                    self.mark_email_as_read(mail, email_id)
-                    self.processed_emails.add(email_id.decode('utf-8'))
+                    # Mark as read, track in memory and persist to file
+                    self.mark_email_as_read(mail, uid_str)
+                    self.processed_emails.add(uid_str)
+                    self._save_processed_uid(uid_str)
                     processed_count += 1
                     logger.info(f"✅ Successfully processed email from {email_data['from_address']}")
                 else:
@@ -327,9 +448,9 @@ class ZohoMailMonitor:
             except:
                 pass
 
-    def run_continuous_monitoring(self, interval_minutes=1):
+    def run_continuous_monitoring(self, interval_seconds=10):
         """Run continuous email monitoring"""
-        logger.info(f"🚀 Starting Zoho Mail monitoring every {interval_minutes} minute(s)")
+        logger.info(f"🚀 Starting Zoho Mail monitoring every {interval_seconds} second(s)")
         logger.info(f"📧 Monitoring: {self.email_address}")
         logger.info(f"🔗 Django API: {self.django_api_url}")
         
@@ -346,14 +467,14 @@ class ZohoMailMonitor:
                     logger.info(f"📬 Processed {posted_count} 'Posted' reply emails")
                 
                 # Wait for next check
-                time.sleep(interval_minutes * 60)
+                time.sleep(interval_seconds)
                 
             except KeyboardInterrupt:
                 logger.info("🛑 Monitoring stopped by user")
                 break
             except Exception as e:
                 logger.error(f"❌ Error in monitoring loop: {str(e)}")
-                time.sleep(60)  # Wait 1 minute before retrying
+                time.sleep(interval_seconds)  # Wait before retrying
 
     def extract_first_cv_attachment(self, email_message):
         acceptable_exts = {'.pdf', '.doc', '.docx'}
@@ -419,34 +540,110 @@ class ZohoMailMonitor:
             logger.error(f"❌ Error posting LinkedIn application: {e}")
             return False
 
+    def _linkedin_lock_acquire(self, timeout_seconds=120):
+        """Acquire exclusive lock for LinkedIn processing (avoid multiple workers processing same emails). Returns True if acquired."""
+        import os
+        path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '.zoho_linkedin.lock')
+        if os.path.exists(path):
+            try:
+                age = time.time() - os.path.getmtime(path)
+                if age < timeout_seconds:
+                    return False
+                os.unlink(path)
+            except Exception:
+                pass
+        try:
+            with open(path, 'x') as f:
+                f.write(str(time.time()))
+            return True
+        except FileExistsError:
+            return False
+        except Exception:
+            return False
+
+    def _linkedin_lock_release(self):
+        """Release LinkedIn processing lock."""
+        import os
+        path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '.zoho_linkedin.lock')
+        try:
+            if os.path.exists(path):
+                os.unlink(path)
+        except Exception:
+            pass
+
     def process_linkedin_applications_once(self):
+        """Fetch fahmy@bit68.com (ZOHO_EMAIL) for unread emails with 'LinkedIn Application' in subject and process CVs. One run at a time."""
+        if not self._linkedin_lock_acquire():
+            logger.debug("LinkedIn processing skipped (another run in progress)")
+            return 0
+        try:
+            return self._process_linkedin_applications_impl()
+        finally:
+            self._linkedin_lock_release()
+
+    def _process_linkedin_applications_impl(self):
+        """Actual LinkedIn application processing (called with lock held)."""
+        # Reload processed UIDs from file so we see latest (e.g. from a previous run that just finished)
+        self.processed_linkedin_uids = self._load_processed_uids_from_file(
+            getattr(self, '_processed_linkedin_uids_file', None)
+        )
         mail = self.connect_to_mailbox()
         if not mail:
+            logger.warning("LinkedIn applications: could not connect to mailbox (check ZOHO_EMAIL/ZOHO_EMAIL_PASSWORD)")
             return 0
         processed = 0
         try:
-            status, msg_ids = mail.search(None, '(UNSEEN SUBJECT "LinkedIn Application")')
+            # Use UID SEARCH for unread; filter by subject in Python (case-insensitive)
+            status, messages = mail.uid('SEARCH', None, 'UNSEEN')
             if status != 'OK':
                 return 0
-            ids = msg_ids[0].split()
-            logger.info(f"Found {len(ids)} unread 'LinkedIn Application' emails")
-            for msg_id in ids:
-                status, msg_data = mail.fetch(msg_id, '(RFC822)')
-                if status != 'OK' or not msg_data or not isinstance(msg_data, list) or not msg_data[0] or len(msg_data[0]) < 2:
-                    logger.warning(f"Skipping email {msg_id.decode('utf-8')} - fetch returned no data")
+            uids = messages[0].split()
+            if not uids:
+                return 0
+            linkedin_key = "linkedin application"
+            matched_uids = []
+            for uid in uids:
+                uid_str = uid.decode('utf-8') if isinstance(uid, bytes) else str(uid)
+                try:
+                    status, msg_data = mail.uid('FETCH', uid_str, '(BODY.PEEK[HEADER.FIELDS (SUBJECT)])')
+                    if status != 'OK' or not msg_data:
+                        continue
+                    raw = None
+                    for part in msg_data:
+                        if isinstance(part, tuple) and len(part) == 2:
+                            raw = part[1]
+                            break
+                        if isinstance(part, bytes) and b'Subject:' in part:
+                            raw = part
+                            break
+                    if raw is None:
+                        continue
+                    if isinstance(raw, bytes):
+                        raw = raw.decode('utf-8', errors='ignore')
+                    if linkedin_key in raw.lower():
+                        matched_uids.append(uid_str)
+                except Exception:
                     continue
-                raw = msg_data[0][1]
+            logger.info(f"Found {len(matched_uids)} unread 'LinkedIn Application' email(s)")
+            for uid_str in matched_uids:
+                # Only process each UID once (unread only; skip if already processed)
+                if uid_str in self.processed_linkedin_uids:
+                    continue
+                status, msg_data = mail.uid('FETCH', uid_str, '(RFC822)')
+                if status != 'OK' or not msg_data or not msg_data[0]:
+                    continue
+                part = msg_data[0]
+                raw = part[1] if isinstance(part, tuple) and len(part) >= 2 else None
                 if not raw:
-                    logger.warning(f"Skipping email {msg_id.decode('utf-8')} - empty payload")
                     continue
                 msg = email.message_from_bytes(raw)
                 subject = msg.get('Subject', '')
                 body = ''
                 if msg.is_multipart():
-                    for part in msg.walk():
-                        if part.get_content_type() == 'text/plain':
+                    for p in msg.walk():
+                        if p.get_content_type() == 'text/plain':
                             try:
-                                body = part.get_payload(decode=True).decode('utf-8', errors='ignore')
+                                body = p.get_payload(decode=True).decode('utf-8', errors='ignore')
                             except Exception:
                                 body = ''
                             break
@@ -459,139 +656,148 @@ class ZohoMailMonitor:
                 vacancy_title = self.parse_vacancy_from_email(subject, body)
                 filename, file_bytes = self.extract_first_cv_attachment(msg)
                 if not filename or not file_bytes or not vacancy_title:
-                    logger.warning(f"Skipping email {msg_id.decode('utf-8')} - missing vacancy or CV")
-                    self.mark_email_as_read(mail, msg_id)
+                    logger.warning(f"Skipping UID {uid_str} - missing vacancy or CV (subject: {subject[:50]}...)")
+                    self.mark_email_as_read(mail, uid_str)
+                    self.processed_linkedin_uids.add(uid_str)
+                    self._save_processed_uid_to_file(uid_str, getattr(self, '_processed_linkedin_uids_file', None))
                     continue
 
                 ok = self.send_linkedin_application_to_django(vacancy_title, filename, file_bytes)
                 if ok:
-                    self.mark_email_as_read(mail, msg_id)
+                    self.mark_email_as_read(mail, uid_str)
+                    self.processed_linkedin_uids.add(uid_str)
+                    self._save_processed_uid_to_file(uid_str, getattr(self, '_processed_linkedin_uids_file', None))
                     processed += 1
             return processed
         finally:
             try:
                 mail.close()
                 mail.logout()
-            except:
+            except Exception:
                 pass
 
     def search_manager_feedback_emails(self, mail):
         """
-        Search for manager feedback reply emails
+        Search for manager feedback reply emails (UNSEEN; subject contains 'feedback').
+        Matches "Re: Feedback Request: {vacancy} - {candidate}" and similar.
+        Returns list of UID strings.
         """
         try:
-            # Search for emails with 'Re:' in subject containing "Feedback Request"
-            # This will match both read and unread emails
-            search_criteria = '(SUBJECT "Re: Feedback Request")'
-            status, messages = mail.search(None, search_criteria)
-            
+            status, messages = mail.uid('SEARCH', None, 'UNSEEN')
             if status != 'OK':
-                print(f"❌ Error searching feedback emails: {messages}")
+                logger.warning("Manager feedback search failed")
                 return []
-            
-            email_ids = messages[0].split() if messages[0] else []
-            print(f"🔍 Found {len(email_ids)} emails matching 'Re: Feedback Request'")
-            return email_ids
+            uids = messages[0].split()
+            if not uids:
+                return []
+            key = "feedback"
+            matched = []
+            for uid in uids:
+                uid_str = uid.decode('utf-8') if isinstance(uid, bytes) else str(uid)
+                try:
+                    status, msg_data = mail.uid('FETCH', uid_str, '(BODY.PEEK[HEADER.FIELDS (SUBJECT)])')
+                    if status != 'OK' or not msg_data:
+                        continue
+                    raw = None
+                    for part in msg_data:
+                        if isinstance(part, tuple) and len(part) == 2:
+                            raw = part[1]
+                            break
+                        if isinstance(part, bytes) and b'Subject:' in part:
+                            raw = part
+                            break
+                    if raw is None:
+                        continue
+                    if isinstance(raw, bytes):
+                        raw = raw.decode('utf-8', errors='ignore')
+                    if key in raw.lower():
+                        matched.append(uid_str)
+                except Exception:
+                    continue
+            logger.info(f"Found {len(matched)} manager feedback email(s)")
+            return matched
         except Exception as e:
-            print(f"❌ Error in search_manager_feedback_emails: {e}")
-            import traceback
-            traceback.print_exc()
+            logger.error(f"Error in search_manager_feedback_emails: {e}")
             return []
 
     def process_manager_feedback_emails_once(self):
         """
-        Process manager feedback emails and save to database
+        Process manager feedback emails (UNSEEN, subject contains 'feedback') and save to database.
+        Uses UID-based fetch, marks as read, and persists UIDs so restarts don't reprocess.
         """
         try:
             from interviews.feedback_parser import ManagerFeedbackParser
-            
-            # Connect to mailbox
+
+            self.processed_feedback_uids = self._load_processed_uids_from_file(
+                getattr(self, '_processed_feedback_uids_file', None)
+            )
             mail = self.connect_to_mailbox()
             if not mail:
-                print("❌ Failed to connect to mailbox")
+                logger.warning("Manager feedback: could not connect to mailbox")
                 return 0
-            
+
             try:
-                feedback_emails = self.search_manager_feedback_emails(mail)
-                if not feedback_emails:
-                    print("📧 No manager feedback emails found")
+                feedback_uids = self.search_manager_feedback_emails(mail)
+                if not feedback_uids:
                     return 0
-                
-                print(f"📧 Found {len(feedback_emails)} manager feedback emails")
-                
+
                 parser = ManagerFeedbackParser()
                 processed_count = 0
-                
-                for msg_id in feedback_emails:
+
+                for uid_str in feedback_uids:
+                    if uid_str in self.processed_feedback_uids:
+                        continue
                     try:
-                        # Fetch email content
-                        status, msg_data = mail.fetch(msg_id, '(RFC822)')
-                        if status != 'OK' or not msg_data or not msg_data[0] or not msg_data[0][1]:
-                            print(f"⚠️ Could not fetch email {msg_id}")
+                        status, msg_data = mail.uid('FETCH', uid_str, '(RFC822)')
+                        if status != 'OK' or not msg_data or not msg_data[0]:
                             continue
-                        
-                        # Parse email
-                        email_message = email.message_from_bytes(msg_data[0][1])
+                        part = msg_data[0]
+                        raw = part[1] if isinstance(part, tuple) and len(part) >= 2 else None
+                        if not raw:
+                            continue
+                        email_message = email.message_from_bytes(raw)
                         subject = email_message.get('Subject', '')
                         from_email = email_message.get('From', '')
-                        
-                        print(f"📧 Processing feedback email: Subject='{subject[:100]}', From='{from_email}'")
-                        
-                        # Get email body
+
                         body = self._get_email_body(email_message)
                         if not body:
-                            print(f"⚠️ No body found in email {msg_id}")
+                            logger.warning(f"Manager feedback UID {uid_str}: no body")
                             continue
-                        
-                        print(f"📄 Email body length: {len(body)} characters")
-                        
-                        # Extract candidate name from subject or body
+
                         candidate_name = self._extract_candidate_name_from_feedback(subject, body)
                         if not candidate_name:
-                            print(f"⚠️ Could not extract candidate name from email {msg_id}")
+                            logger.warning(f"Manager feedback UID {uid_str}: could not extract candidate name from subject/body")
                             continue
-                        
-                        # Find corresponding interview
+
                         interview = parser.find_interview_by_candidate_name(candidate_name)
                         if not interview:
-                            print(f"⚠️ No interview found for candidate: {candidate_name}")
-                            # Try to find by partial match or show available candidates
-                            from interviews.models import Interview
-                            recent_interviews = Interview.objects.filter(
-                                scheduled_at__gte=timezone.now() - timedelta(days=30)
-                            ).select_related('candidate', 'vacancy')[:10]
-                            print(f"   Recent interviews: {[(i.candidate.full_name, i.vacancy.title) for i in recent_interviews]}")
+                            logger.warning(f"No interview found for candidate: {candidate_name} (UID {uid_str})")
                             continue
-                        
-                        print(f"✅ Found interview for {candidate_name} - {interview.vacancy.title}")
-                        
-                        # Parse feedback data
+
                         parsed_data = parser.parse_feedback_email(subject, body)
-                        print(f"📊 Parsed feedback - Rating: {parsed_data['rating']}, Recommended: {parsed_data['recommended']}, Text length: {len(parsed_data['feedback_text'])}")
-                        
-                        # Save feedback
-                        feedback = parser.save_manager_feedback(interview, parsed_data)
-                        
-                        print(f"✅ Saved feedback for {candidate_name}: Rating={parsed_data['rating']}, Recommended={parsed_data['recommended']}")
+                        parser.save_manager_feedback(interview, parsed_data)
+
+                        self.mark_email_as_read(mail, uid_str)
+                        self.processed_feedback_uids.add(uid_str)
+                        self._save_processed_uid_to_file(uid_str, getattr(self, '_processed_feedback_uids_file', None))
                         processed_count += 1
-                        
+                        logger.info(f"Saved manager feedback for {candidate_name} (UID {uid_str})")
+
                     except Exception as e:
-                        print(f"❌ Error processing feedback email {msg_id}: {e}")
-                        import traceback
-                        traceback.print_exc()
+                        logger.error(f"Error processing manager feedback UID {uid_str}: {e}")
                         continue
-                
+
                 return processed_count
-                
+
             finally:
                 try:
                     mail.close()
                     mail.logout()
-                except:
+                except Exception:
                     pass
-            
+
         except Exception as e:
-            print(f"❌ Error in process_manager_feedback_emails_once: {e}")
+            logger.error(f"Error in process_manager_feedback_emails_once: {e}")
             return 0
 
     def _extract_candidate_name_from_feedback(self, subject: str, body: str) -> str:
@@ -768,97 +974,102 @@ class ZohoMailMonitor:
 
     def search_questionnaire_reply_emails(self, mail):
         """
-        Search for candidate questionnaire reply emails
+        Search for candidate questionnaire reply emails (unread; subject contains 'questionnaire').
+        Matches "Re: Pre-Interview Questionnaire - Title", "Re: Questionnaire", etc.
         """
         try:
-            # Search for emails with 'Re:' in subject containing questionnaire
-            search_criteria = '(SUBJECT "Re: Questionnaire")'
-            status, messages = mail.search(None, search_criteria)
-            
+            status, messages = mail.uid('SEARCH', None, 'UNSEEN')
             if status != 'OK':
-                print(f"❌ Error searching questionnaire reply emails: {messages}")
                 return []
-            
-            return messages[0].split() if messages[0] else []
+            uids = messages[0].split()
+            if not uids:
+                return []
+            key = "questionnaire"
+            matched = []
+            for uid in uids:
+                uid_str = uid.decode('utf-8') if isinstance(uid, bytes) else str(uid)
+                try:
+                    status, msg_data = mail.uid('FETCH', uid_str, '(BODY.PEEK[HEADER.FIELDS (SUBJECT)])')
+                    if status != 'OK' or not msg_data:
+                        continue
+                    raw = None
+                    for part in msg_data:
+                        if isinstance(part, tuple) and len(part) == 2:
+                            raw = part[1]
+                            break
+                        if isinstance(part, bytes) and b'Subject:' in part:
+                            raw = part
+                            break
+                    if raw is None:
+                        continue
+                    if isinstance(raw, bytes):
+                        raw = raw.decode('utf-8', errors='ignore')
+                    if key in raw.lower():
+                        matched.append(uid_str)
+                except Exception:
+                    continue
+            logger.info(f"Found {len(matched)} questionnaire reply email(s)")
+            return matched
         except Exception as e:
-            print(f"❌ Error in search_questionnaire_reply_emails: {e}")
+            logger.error(f"Error searching questionnaire reply emails: {e}")
             return []
 
     def process_questionnaire_reply_emails_once(self):
         """
-        Process candidate questionnaire reply emails and save to database
+        Process candidate questionnaire reply emails and save to database.
+        Matches replies to "Pre-Interview Questionnaire - X" and "Re: Questionnaire" etc.
         """
         try:
-            # Connect to mailbox
             mail = self.connect_to_mailbox()
             if not mail:
-                print("❌ Failed to connect to mailbox")
+                logger.warning("Questionnaire replies: could not connect to mailbox")
                 return 0
-            
             try:
-                reply_emails = self.search_questionnaire_reply_emails(mail)
-                if not reply_emails:
-                    print("📧 No questionnaire reply emails found")
+                reply_uids = self.search_questionnaire_reply_emails(mail)
+                if not reply_uids:
                     return 0
-                
-                print(f"📧 Found {len(reply_emails)} questionnaire reply emails")
-                
                 processed_count = 0
-                
-                for msg_id in reply_emails:
+                for uid_str in reply_uids:
                     try:
-                        # Fetch email content
-                        status, msg_data = mail.fetch(msg_id, '(RFC822)')
-                        if status != 'OK' or not msg_data:
+                        status, msg_data = mail.uid('FETCH', uid_str, '(RFC822)')
+                        if status != 'OK' or not msg_data or not msg_data[0]:
                             continue
-                        
-                        # Parse email
-                        email_message = email.message_from_bytes(msg_data[0][1])
+                        part = msg_data[0]
+                        raw = part[1] if isinstance(part, tuple) and len(part) >= 2 else None
+                        if not raw:
+                            continue
+                        email_message = email.message_from_bytes(raw)
                         subject = email_message.get('Subject', '')
                         from_email = email_message.get('From', '')
-                        
-                        # Get email body
                         body = self._get_email_body(email_message)
-                        
-                        # Extract candidate email from "From" field
                         candidate_email = self._extract_candidate_email_from_reply(from_email)
                         if not candidate_email:
-                            print(f"⚠️ Could not extract candidate email from: {from_email}")
+                            logger.warning(f"Could not extract candidate email from: {from_email}")
                             continue
-                        
-                        # Find corresponding candidate vacancy profile by email
                         from candidates.models import CandidateVacancyProfile
                         profile = CandidateVacancyProfile.objects.filter(
                             candidate__email__iexact=candidate_email
                         ).first()
-                        
                         if not profile:
-                            print(f"⚠️ No profile found for candidate email: {candidate_email}")
+                            logger.warning(f"No CandidateVacancyProfile for {candidate_email} — ensure candidate applied and has a profile for the vacancy")
                             continue
-                        
-                        # Update profile with questionnaire response
                         profile.questionnaire_response = body
                         profile.questionnaire_response_date = timezone.now()
                         profile.save()
-                        
-                        print(f"✅ Saved questionnaire response for {candidate_email}")
+                        self.mark_email_as_read(mail, uid_str)
                         processed_count += 1
-                        
+                        logger.info(f"Saved questionnaire response for {candidate_email}")
                     except Exception as e:
-                        print(f"❌ Error processing questionnaire reply email {msg_id}: {e}")
-                        continue
-                
+                        logger.error(f"Error processing questionnaire reply UID {uid_str}: {e}")
                 return processed_count
-                
             finally:
                 try:
                     mail.close()
                     mail.logout()
-                except:
+                except Exception:
                     pass
-            
         except Exception as e:
-            print(f"❌ Error in process_questionnaire_reply_emails_once: {e}")
+            logger.error(f"Error in process_questionnaire_reply_emails_once: {e}")
             return 0
 
     def _extract_candidate_name_from_questionnaire_reply(self, subject: str) -> str:
@@ -914,10 +1125,18 @@ def main():
         mail.close()
         mail.logout()
         
-        # Start monitoring
+        # Start monitoring (interval in seconds; default 10, override via ZOHO_CHECK_INTERVAL_SECONDS)
+        import os
+        interval_sec = 10
+        try:
+            env_interval = os.environ.get('ZOHO_CHECK_INTERVAL_SECONDS')
+            if env_interval is not None:
+                interval_sec = int(env_interval)
+        except (TypeError, ValueError):
+            pass
         print("\n🚀 Starting continuous monitoring...")
         print("Press Ctrl+C to stop")
-        monitor.run_continuous_monitoring()
+        monitor.run_continuous_monitoring(interval_seconds=interval_sec)
     else:
         print("❌ Connection failed. Please check your credentials.")
 

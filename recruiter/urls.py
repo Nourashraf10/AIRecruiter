@@ -31,6 +31,7 @@ from comms.views import InboundEmailView, ManagerApprovalView, ApplicationCollec
 from django.views.generic import TemplateView
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth.decorators import login_required
+from django.views.decorators.csrf import csrf_exempt
 from ai.views import CVAnalysisView, BulkCVAnalysisView, TopCandidatesView, CVUploadView, CVTextExtractionView
 from interviews.views import ScheduleInterviewsView, GetAvailableSlotsView, SendInterviewNotificationsView, DiscoverCalendarView
 from core.views import DashboardView
@@ -48,8 +49,8 @@ urlpatterns = [
      path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('api/dashboard/', DashboardView.as_view(), name='dashboard'),
-    path('api/inbound/email/', InboundEmailView.as_view(), name='inbound_email'),
-    path('api/inbound/linkedin-application/', LinkedInApplicationInboundView.as_view(), name='linkedin_application_inbound'),
+    path('api/inbound/email/', csrf_exempt(InboundEmailView.as_view()), name='inbound_email'),
+    path('api/inbound/linkedin-application/', csrf_exempt(LinkedInApplicationInboundView.as_view()), name='linkedin_application_inbound'),
     path('api/approve-vacancy/<str:approval_token>/', ManagerApprovalView.as_view(), name='manager_approval'),
     # Nice local approval landing page
     path('approve/<str:approval_token>/', ApprovalLandingView.as_view(), name='approval_landing'),

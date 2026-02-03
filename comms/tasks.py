@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 @shared_task(bind=True, max_retries=3)
 def daily_interview_scheduling_task(self):
     """
-    Celery task to run daily interview scheduling at 11:59 PM
+    Celery task for daily interview scheduling (default 12:56 AM; see CELERY_BEAT_SCHEDULE or Django Admin > Periodic Tasks).
     
     This task:
     1. Finds vacancies in 'collecting_applications' status
