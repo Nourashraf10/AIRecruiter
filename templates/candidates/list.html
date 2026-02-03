@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+
+{% block title %}Candidates{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1>Candidates</h1>
+        <p style="color:var(--text-secondary)">Manage your talent pool</p>
+    </div>
+</div>
+
+<div class="card">
+    <table>
+        <thead>
+            <tr>
+                <th>Candidate Name</th>
+                <th>Email</th>
+                <th>AI Score</th>
+                <th>Applied For</th>
+                <th>Date Added</th>
+                <th>CV</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for candidate in candidates %}
+            <tr>
+                <td>
+                    <strong>{{ candidate.full_name }}</strong>
+                </td>
+                <td>{{ candidate.email }}</td>
+                <td>
+                    {% if candidate.ai_score_out_of_10 %}
+                    <span
+                        style="font-weight: 600; color: {% if candidate.ai_score_out_of_10 >= 7 %}var(--success-color){% elif candidate.ai_score_out_of_10 >= 4 %}var(--warning-color){% else %}var(--text-secondary){% endif %}">
+                        {{ candidate.ai_score_out_of_10 }}/10
+                    </span>
+                    {% else %}
+                    <span style="color: var(--text-secondary);">-</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% with app=candidate.applications.first %}
+                    {% if app %}
+                    {{ app.vacancy.title }}
+                    {% else %}
+                    <span style="color: var(--text-secondary); font-style: italic;">No active application</span>
+                    {% endif %}
+                    {% endwith %}
+                </td>
+                <td>{{ candidate.created_at|date:"M d, Y" }}</td>
+                <td>
+                    {% if candidate.cv_file %}
+                    <a href="{{ candidate.cv_file.url }}" target="_blank" class="btn-outline"
+                        style="padding: 0.25rem 0.5rem; text-decoration: none; border-radius: 4px; font-size: 0.75rem;">View
+                        CV</a>
+                    {% else %}
+                    <span style="color: var(--text-secondary); font-size: 0.875rem;">No CV</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="6" style="text-align:center; padding: 2rem;">
+                    <p>No candidates found in the database.</p>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

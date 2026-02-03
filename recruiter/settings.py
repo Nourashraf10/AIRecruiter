@@ -169,6 +169,7 @@ CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
 
 # Celery Beat Schedule
 from celery.schedules import crontab
+from datetime import timedelta
 
 CELERY_BEAT_SCHEDULE = {
     "daily_interview_scheduling": {
@@ -189,6 +190,10 @@ CELERY_BEAT_SCHEDULE = {
     },
     "process_manager_feedback_emails": {
         "task": "interviews.tasks.process_manager_feedback_emails",
-        "schedule": crontab(minute='*'),  # Every minute
+        "schedule": timedelta(seconds=5),  # Every 5 seconds
+    },
+    "check_vacancy_emails": {
+        "task": "comms.tasks.check_vacancy_emails",
+        "schedule": timedelta(seconds=5),  # Every 5 seconds
     },
 }

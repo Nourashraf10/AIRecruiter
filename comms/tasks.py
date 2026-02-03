@@ -149,3 +149,15 @@ def check_linkedin_inbox(self):
     except Exception as e:
         logger.exception("LinkedIn inbox check failed")
         return {'success': False, 'error': str(e)}
+@shared_task(bind=True, name="comms.tasks.check_vacancy_emails")
+def check_vacancy_emails(self):
+    try:
+        from zoho_mail_monitor import ZohoMailMonitor
+        monitor = ZohoMailMonitor()
+        count = monitor.process_vacancy_emails()
+        if count > 0:
+            logger.info(f"Vacancy emails processed: {count}")
+        return {'success': True, 'count': count}
+    except Exception as e:
+        logger.exception("Vacancy email check failed")
+        return {'success': False, 'error': str(e)}

@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+
+{% block title %}Interviews{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1>Interviews</h1>
+        <p style="color:var(--text-secondary)">Scheduled and past interviews</p>
+    </div>
+</div>
+
+<div class="card">
+    <table>
+        <thead>
+            <tr>
+                <th>Candidate</th>
+                <th>Vacancy</th>
+                <th>Scheduled Time</th>
+                <th>Interviewer</th>
+                <th>Status</th>
+                <th>Meeting Link</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for interview in interviews %}
+            <tr>
+                <td>
+                    <strong>{{ interview.candidate.full_name }}</strong>
+                </td>
+                <td>{{ interview.vacancy.title }}</td>
+                <td>
+                    {{ interview.scheduled_at|date:"M d, Y" }}<br>
+                    <span style="color: var(--text-secondary); font-size: 0.75rem;">{{ interview.scheduled_at|date:"H:i"
+                        }}</span>
+                </td>
+                <td>{{ interview.manager.get_full_name|default:interview.manager.username }}</td>
+                <td>
+                    <span class="status-badge 
+                        {% if interview.status == 'scheduled' %}status-active
+                        {% elif interview.status == 'completed' %}status-closed
+                        {% else %}status-awaiting{% endif %}">
+                        {{ interview.get_status_display }}
+                    </span>
+                </td>
+                <td>
+                    {% if interview.meeting_link %}
+                    <a href="{{ interview.meeting_link }}" target="_blank" class="btn-outline"
+                        style="padding: 0.25rem 0.5rem; text-decoration: none; border-radius: 4px; font-size: 0.75rem;">Join</a>
+                    {% else %}
+                    -
+                    {% endif %}
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="6" style="text-align:center; padding: 2rem;">
+                    <p>No interviews scheduled.</p>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

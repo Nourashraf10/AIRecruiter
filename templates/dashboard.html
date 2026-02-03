@@ -1,0 +1,227 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Dashboard specific (reused from previous dashboard.html css logic minus base styles) */
+    .metrics-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2.5rem;
+    }
+
+    .metric-card {
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 1.5rem;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        transition: transform 0.2s;
+    }
+
+    .metric-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    }
+
+    .metric-title {
+        color: var(--text-secondary);
+        font-size: 0.875rem;
+        font-weight: 500;
+        margin-bottom: 0.5rem;
+    }
+
+    .metric-value {
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--text-primary);
+    }
+
+    .metric-trend {
+        font-size: 0.75rem;
+        color: var(--success-color);
+        margin-top: 0.25rem;
+    }
+
+    .content-grid {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 2rem;
+    }
+
+    @media (max-width: 768px) {
+        .content-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .section-card {
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 1.5rem;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        margin-bottom: 2rem;
+    }
+
+    .section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .section-title {
+        font-size: 1.125rem;
+        font-weight: 600;
+    }
+
+    .list-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem 0;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .list-item:last-child {
+        border-bottom: none;
+    }
+
+    .item-main {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .item-title {
+        font-weight: 500;
+        color: var(--text-primary);
+    }
+
+    .item-sub {
+        font-size: 0.75rem;
+        color: var(--text-secondary);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1>Dashboard</h1>
+        <p style="color:var(--text-secondary)">Overview of your hiring pipeline</p>
+    </div>
+
+</div>
+
+<!-- Key Metrics -->
+<div class="metrics-grid">
+    <div class="metric-card">
+        <div class="metric-title">Active Vacancies</div>
+        <div class="metric-value">{{ active_vacancies }}</div>
+        <div class="metric-trend">out of {{ total_vacancies }} total</div>
+    </div>
+    <div class="metric-card">
+        <div class="metric-title">Total Candidates</div>
+        <div class="metric-value">{{ total_candidates }}</div>
+        <div class="metric-trend">in database</div>
+    </div>
+    <div class="metric-card">
+        <div class="metric-title">Upcoming Interviews</div>
+        <div class="metric-value">{{ upcoming_interviews }}</div>
+        <div class="metric-trend">scheduled</div>
+    </div>
+    <div class="metric-card">
+        <div class="metric-title">Total Interviews</div>
+        <div class="metric-value">{{ total_interviews }}</div>
+        <div class="metric-trend">all time</div>
+    </div>
+</div>
+
+<div class="content-grid">
+    <!-- Main Column -->
+    <div>
+        <div class="section-card">
+            <div class="section-header">
+                <div class="section-title">Latest Vacancies</div>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Details</th>
+                        <th>Department</th>
+                        <th>Status</th>
+                        <th>Candidates</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for v in vacancies %}
+                    <tr>
+                        <td>
+                            <strong>{{ v.title }}</strong><br>
+                            <span style="color:var(--text-secondary); font-size:0.75rem;">{{ v.created_at|date:"M d, Y"
+                                }}</span>
+                        </td>
+                        <td>{{ v.department }}</td>
+                        <td>
+                            <span class="status-badge 
+                                {% if v.status == 'collecting_applications' %}status-active
+                                {% elif v.status == 'closed' %}status-closed
+                                {% else %}status-awaiting{% endif %}">
+                                {{ v.get_status_display }}
+                            </span>
+                        </td>
+                        <td>{{ v.app_count }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4" style="text-align:center;">No vacancies found.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Sidebar Column -->
+    <div>
+        <div class="section-card">
+            <div class="section-header">
+                <div class="section-title">Recent Applications</div>
+            </div>
+            {% for app in recent_applications %}
+            <div class="list-item">
+                <div class="item-main">
+                    <span class="item-title">{{ app.cv.candidate.full_name }}</span>
+                    <span class="item-sub">{{ app.vacancy.title }}</span>
+                </div>
+                <span style="font-size:0.75rem; color:var(--text-secondary);">Avg Score: {{
+                    app.cv.candidate.ai_score_out_of_10|default:"-" }}</span>
+            </div>
+            {% empty %}
+            <div class="list-item"><span class="item-sub">No recent applications.</span></div>
+            {% endfor %}
+        </div>
+
+        <div class="section-card">
+            <div class="section-header">
+                <div class="section-title">Upcoming Interviews</div>
+            </div>
+            {% for interview in recent_interviews %}
+            <div class="list-item">
+                <div class="item-main">
+                    <span class="item-title">{{ interview.candidate.full_name }}</span>
+                    <span class="item-sub">{{ interview.scheduled_at|date:"M d, H:i" }}</span>
+                </div>
+            </div>
+            {% empty %}
+            <div class="list-item"><span class="item-sub">No upcoming interviews.</span></div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

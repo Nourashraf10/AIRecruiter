@@ -146,17 +146,32 @@ class ZohoMailMonitor:
     def search_vacancy_emails(self, mail):
         """Search for emails with 'Open Vacancy' subject"""
         try:
-            # Search for unread emails with 'Open Vacancy' in subject
-            search_criteria = '(UNSEEN SUBJECT "Open Vacancy")'
-            status, messages = mail.search(None, search_criteria)
+            # Zoho IMAP has a bug where (UNSEEN SUBJECT "...") doesn't work properly
+            # So we get all UNSEEN emails first, then filter by subject manually
+            status, messages = mail.search(None, 'UNSEEN')
             
-            if status == 'OK':
-                email_ids = messages[0].split()
-                logger.info(f"Found {len(email_ids)} unread 'Open Vacancy' emails")
-                return email_ids
-            else:
+            if status != 'OK':
                 logger.error("Failed to search emails")
                 return []
+            
+            all_unseen_ids = messages[0].split() if messages[0] else []
+            
+            # Filter by subject manually
+            matching_ids = []
+            for email_id in all_unseen_ids:
+                try:
+                    status, msg_data = mail.fetch(email_id, '(RFC822)')
+                    if status == 'OK' and msg_data and msg_data[0] and msg_data[0][1]:
+                        email_message = email.message_from_bytes(msg_data[0][1])
+                        subject = email_message.get('Subject', '')
+                        if subject == "Open Vacancy":
+                            matching_ids.append(email_id)
+                except Exception as e:
+                    logger.error(f"Error checking email {email_id}: {str(e)}")
+                    continue
+            
+            logger.info(f"Found {len(matching_ids)} unread 'Open Vacancy' emails")
+            return matching_ids
         except Exception as e:
             logger.error(f"Error searching emails: {str(e)}")
             return []

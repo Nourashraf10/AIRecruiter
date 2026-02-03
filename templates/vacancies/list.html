@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+
+{% block title %}Vacancies{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1>Vacancies</h1>
+        <p style="color:var(--text-secondary)">Manage your open positions</p>
+    </div>
+    <div>
+        <a href="{% url 'vacancy_create' %}" class="btn">Create Vacancy</a>
+    </div>
+</div>
+
+<div class="card">
+    <table>
+        <thead>
+            <tr>
+                <th>Job Title</th>
+                <th>Department</th>
+                <th>Status</th>
+                <th>Candidates</th>
+                <th>Created</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for vacancy in vacancies %}
+            <tr>
+                <td>
+                    <strong>{{ vacancy.title }}</strong>
+                </td>
+                <td>{{ vacancy.department }}</td>
+                <td>
+                    <span class="status-badge 
+                        {% if vacancy.status == 'collecting_applications' %}status-active
+                        {% elif vacancy.status == 'closed' %}status-closed
+                        {% else %}status-awaiting{% endif %}">
+                        {{ vacancy.get_status_display }}
+                    </span>
+                </td>
+                <td>{{ vacancy.app_count }}</td>
+                <td>{{ vacancy.created_at|date:"M d, Y" }}</td>
+                <td>
+                    <a href="{% url 'vacancy_update' vacancy.id %}" class="btn-outline"
+                        style="padding: 0.25rem 0.5rem; text-decoration: none; border-radius: 4px; font-size: 0.75rem;">Edit</a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="6" style="text-align:center; padding: 2rem;">
+                    <p style="margin-bottom: 1rem;">No vacancies found.</p>
+                    <a href="{% url 'vacancy_create' %}" class="btn">Create your first vacancy</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

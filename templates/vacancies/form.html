@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if form.instance.pk %}Edit Vacancy{% else %}Create Vacancy{% endif %}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1>{% if form.instance.pk %}Edit Vacancy{% else %}Create Vacancy{% endif %}</h1>
+        <p style="color:var(--text-secondary)">Define role requirements and automated screening criteria</p>
+    </div>
+    <div>
+        <a href="{% url 'vacancy_list' %}" class="btn-outline"
+            style="padding: 0.625rem 1.25rem; border-radius: 6px; text-decoration: none;">Cancel</a>
+    </div>
+</div>
+
+<div class="card" style="max-width: 800px; margin: 0 auto;">
+    <form method="post">
+        {% csrf_token %}
+
+        <div class="form-group">
+            <label for="{{ form.title.id_for_label }}">Job Title</label>
+            {{ form.title }}
+        </div>
+
+        <div class="form-group">
+            <label for="{{ form.department.id_for_label }}">Department</label>
+            {{ form.department }}
+        </div>
+
+        <div class="form-group">
+            <label for="{{ form.status.id_for_label }}">Status</label>
+            {{ form.status }}
+        </div>
+
+        <div style="margin: 2rem 0; border-top: 1px solid var(--border-color); padding-top: 2rem;">
+            <h3 style="margin-bottom: 1rem;">AI Screening Criteria</h3>
+
+            <div class="form-group">
+                <label for="{{ form.keywords.id_for_label }}">Keywords (Comma-separated)</label>
+                {{ form.keywords }}
+                <small style="color: var(--text-secondary);">e.g. Python, Django, React, AWS</small>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div class="form-group" style="display: flex; align-items: center; gap: 0.5rem;">
+                    {{ form.require_dob_in_cv }}
+                    <label for="{{ form.require_dob_in_cv.id_for_label }}" style="margin: 0;">Require DOB</label>
+                </div>
+                <div class="form-group" style="display: flex; align-items: center; gap: 0.5rem;">
+                    {{ form.require_egyptian }}
+                    <label for="{{ form.require_egyptian.id_for_label }}" style="margin: 0;">Require Egyptian</label>
+                </div>
+                <div class="form-group" style="display: flex; align-items: center; gap: 0.5rem;">
+                    {{ form.require_relevant_university }}
+                    <label for="{{ form.require_relevant_university.id_for_label }}" style="margin: 0;">Require
+                        University Degree</label>
+                </div>
+                <div class="form-group" style="display: flex; align-items: center; gap: 0.5rem;">
+                    {{ form.require_relevant_major }}
+                    <label for="{{ form.require_relevant_major.id_for_label }}" style="margin: 0;">Require Relevant
+                        Major</label>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="{{ form.questionnaire_template.id_for_label }}">Questionnaire Template (JSON)</label>
+            {{ form.questionnaire_template }}
+        </div>
+
+        <div style="margin-top: 2rem; display: flex; justify-content: flex-end;">
+            <button type="submit" class="btn">Save Vacancy</button>
+        </div>
+    </form>
+</div>
+{% endblock %}
