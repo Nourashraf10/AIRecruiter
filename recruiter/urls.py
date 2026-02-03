@@ -31,6 +31,7 @@ from comms.views import InboundEmailView, ManagerApprovalView, ApplicationCollec
 from django.views.generic import TemplateView
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth.decorators import login_required
+from django.views.decorators.csrf import csrf_exempt
 from ai.views import CVAnalysisView, BulkCVAnalysisView, TopCandidatesView, CVUploadView, CVTextExtractionView
 from interviews.views import ScheduleInterviewsView, GetAvailableSlotsView, SendInterviewNotificationsView, DiscoverCalendarView
 from core.views import (

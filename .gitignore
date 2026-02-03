@@ -1,4 +1,8 @@
 .env
+.zoho_processed_vacancy_uids.txt
+.zoho_processed_linkedin_uids.txt
+.zoho_processed_feedback_uids.txt
+.zoho_linkedin.lock
 env/
 *.pyc
 __pycache__/

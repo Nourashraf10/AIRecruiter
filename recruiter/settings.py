@@ -174,15 +174,15 @@ from datetime import timedelta
 CELERY_BEAT_SCHEDULE = {
     "daily_interview_scheduling": {
         "task": "comms.tasks.daily_interview_scheduling_task",
-        "schedule": crontab(hour=4, minute=10),  # 10:00 AM daily
+        "schedule": crontab(hour=0, minute=56),  # 12:56 AM daily (Africa/Cairo per CELERY_TIMEZONE)
     },
     "check_feedback_requests": {
         "task": "interviews.tasks.check_and_send_feedback_requests",
         "schedule": crontab(minute='*'),  # Every minute
     },
-    "check_linkedin_inbox_every_minute": {
+    "check_linkedin_inbox_every_10_seconds": {
         "task": "comms.tasks.check_linkedin_inbox",
-        "schedule": crontab(minute="*"),
+        "schedule": schedule(run_every=10),  # Every 10 seconds
     },
     "process_questionnaire_reply_emails": {
         "task": "interviews.tasks.process_questionnaire_reply_emails",
