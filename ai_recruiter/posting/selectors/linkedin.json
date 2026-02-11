@@ -1,0 +1,16 @@
+{
+  "//": "High-level URLs and selectors for LinkedIn job posting automation.",
+  "login_url": "https://www.linkedin.com/login",
+  "job_post_url": "https://www.linkedin.com/talent/post-a-job",
+  "selectors": {
+    "email_input": "#username",
+    "password_input": "#password",
+    "login_button": "button[type='submit']",
+    "//": "The following are placeholders; inspect the real DOM and adjust.",
+    "job_title_input": "input[name='jobTitle']",
+    "job_location_input": "input[name='jobLocation']",
+    "job_description_textarea": "textarea[name='jobDescription']",
+    "submit_button": "button[type='submit']"
+  }
+}
+

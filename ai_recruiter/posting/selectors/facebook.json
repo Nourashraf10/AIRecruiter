@@ -1,0 +1,15 @@
+{
+  "//": "High-level URLs and selectors for Facebook Page post automation (regular posts, not Jobs).",
+  "login_url": "https://www.facebook.com/login",
+  "page_url": "https://www.facebook.com/",
+  "selectors": {
+    "email_input": "#email",
+    "password_input": "#pass",
+    "login_button": "button[name='login']",
+    "//": "All of the following will likely need adjustment once you record the real flow on your Page.",
+    "create_post_button": "div:has-text(\"What's on your mind\")",
+    "composer_textbox": "div[role='textbox']",
+    "publish_button": "div[aria-label='Post']"
+  }
+}
+

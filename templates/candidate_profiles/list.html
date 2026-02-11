@@ -1,0 +1,136 @@
+{% extends 'base.html' %}
+
+{% block title %}Candidate profiles{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1>Candidate profiles</h1>
+        <p style="color:var(--text-secondary)">Candidate–vacancy profiles (application, AI, feedback, interview)</p>
+    </div>
+</div>
+
+<div class="card" style="margin-bottom: 1.5rem;">
+    <form method="get" action="{% url 'candidate_profile_list' %}" style="display: flex; flex-wrap: wrap; gap: 1rem; align-items: flex-end;">
+        <div style="flex: 1; min-width: 200px;">
+            <label for="q" style="display: block; font-size: 0.875rem; margin-bottom: 0.25rem;">Search</label>
+            <input type="text" name="q" id="q" value="{{ search_q }}" placeholder="Candidate, vacancy, feedback, AI analysis…" class="form-control" style="width: 100%;">
+        </div>
+        <div>
+            <label for="application_status" style="display: block; font-size: 0.875rem; margin-bottom: 0.25rem;">Status</label>
+            <select name="application_status" id="application_status" class="form-control" style="min-width: 140px;">
+                <option value="">All</option>
+                <option value="applied" {% if filter_application_status == 'applied' %}selected{% endif %}>Applied</option>
+                <option value="accepted" {% if filter_application_status == 'accepted' %}selected{% endif %}>Accepted</option>
+                <option value="rejected" {% if filter_application_status == 'rejected' %}selected{% endif %}>Rejected</option>
+                <option value="shortlisted" {% if filter_application_status == 'shortlisted' %}selected{% endif %}>Shortlisted</option>
+                <option value="interview_scheduled" {% if filter_application_status == 'interview_scheduled' %}selected{% endif %}>Interview scheduled</option>
+                <option value="interview_done" {% if filter_application_status == 'interview_done' %}selected{% endif %}>Interview done</option>
+            </select>
+        </div>
+        <div>
+            <label for="manager_rating" style="display: block; font-size: 0.875rem; margin-bottom: 0.25rem;">Manager rating</label>
+            <select name="manager_rating" id="manager_rating" class="form-control" style="min-width: 120px;">
+                <option value="">All</option>
+                <option value="1" {% if filter_manager_rating == '1' %}selected{% endif %}>Poor</option>
+                <option value="2" {% if filter_manager_rating == '2' %}selected{% endif %}>Fair</option>
+                <option value="3" {% if filter_manager_rating == '3' %}selected{% endif %}>Good</option>
+                <option value="4" {% if filter_manager_rating == '4' %}selected{% endif %}>Very Good</option>
+                <option value="5" {% if filter_manager_rating == '5' %}selected{% endif %}>Excellent</option>
+            </select>
+        </div>
+        <div>
+            <label for="manager_recommendation" style="display: block; font-size: 0.875rem; margin-bottom: 0.25rem;">Recommended</label>
+            <select name="manager_recommendation" id="manager_recommendation" class="form-control" style="min-width: 100px;">
+                <option value="">All</option>
+                <option value="1" {% if filter_manager_recommendation == '1' %}selected{% endif %}>Yes</option>
+                <option value="0" {% if filter_manager_recommendation == '0' %}selected{% endif %}>No</option>
+            </select>
+        </div>
+        <div>
+            <label for="interview_scheduled" style="display: block; font-size: 0.875rem; margin-bottom: 0.25rem;">Interview</label>
+            <select name="interview_scheduled" id="interview_scheduled" class="form-control" style="min-width: 100px;">
+                <option value="">All</option>
+                <option value="1" {% if filter_interview_scheduled == '1' %}selected{% endif %}>Scheduled</option>
+                <option value="0" {% if filter_interview_scheduled == '0' %}selected{% endif %}>Not scheduled</option>
+            </select>
+        </div>
+        <div>
+            <label for="department" style="display: block; font-size: 0.875rem; margin-bottom: 0.25rem;">Department</label>
+            <select name="department" id="department" class="form-control" style="min-width: 120px;">
+                <option value="">All</option>
+                {% for dept in vacancies %}
+                <option value="{{ dept }}" {% if filter_department == dept %}selected{% endif %}>{{ dept }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div style="display: flex; gap: 0.5rem;">
+            <button type="submit" class="btn">Filter</button>
+            <a href="{% url 'candidate_profile_list' %}" class="btn btn-outline" style="text-decoration: none;">Clear</a>
+        </div>
+    </form>
+</div>
+
+<div class="card">
+    <table>
+        <thead>
+            <tr>
+                <th>Candidate</th>
+                <th>Vacancy</th>
+                <th>Status</th>
+                <th>AI Score</th>
+                <th>Manager rating</th>
+                <th>Recommended</th>
+                <th>Rec. email</th>
+                <th>Interview</th>
+                <th>Created</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for profile in profiles %}
+            <tr>
+                <td>
+                    <strong>{{ profile.candidate.full_name }}</strong><br>
+                    <span style="color: var(--text-secondary); font-size: 0.75rem;">{{ profile.candidate.email }}</span>
+                </td>
+                <td>{{ profile.vacancy.title }}<br><span style="color: var(--text-secondary); font-size: 0.75rem;">{{ profile.vacancy.department }}</span></td>
+                <td>
+                    <span class="status-badge
+                        {% if profile.application_status == 'shortlisted' or profile.application_status == 'interview_scheduled' %}status-active
+                        {% elif profile.application_status == 'rejected' %}status-closed
+                        {% else %}status-awaiting{% endif %}">
+                        {{ profile.application_status|default:"—" }}
+                    </span>
+                </td>
+                <td>{% if profile.ai_score %}{{ profile.ai_score }}{% else %}—{% endif %}</td>
+                <td>{% if profile.manager_rating %}{{ profile.get_manager_rating_display }}{% else %}—{% endif %}</td>
+                <td>{% if profile.manager_recommendation is True %}Yes{% elif profile.manager_recommendation is False %}No{% else %}—{% endif %}</td>
+                <td>{% if profile.recommendation_email_sent %}Yes{% else %}—{% endif %}</td>
+                <td>{% if profile.interview_scheduled %}Yes{% else %}—{% endif %}</td>
+                <td>{{ profile.created_at|date:'M d, Y' }}</td>
+                <td>
+                    <a href="{% url 'candidate_profile_detail' profile.pk %}" class="btn-outline" style="padding: 0.25rem 0.5rem; text-decoration: none; border-radius: 4px; font-size: 0.75rem;">View</a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="10" style="text-align:center; padding: 2rem;">No candidate profiles match your filters.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% if is_paginated %}
+<nav style="margin-top: 1rem; display: flex; justify-content: center; gap: 0.5rem;">
+    {% if page_obj.has_previous %}
+    <a href="?page={{ page_obj.previous_page_number }}{% if search_q %}&q={{ search_q|urlencode }}{% endif %}{% if filter_application_status %}&application_status={{ filter_application_status }}{% endif %}{% if filter_manager_rating %}&manager_rating={{ filter_manager_rating }}{% endif %}{% if filter_manager_recommendation %}&manager_recommendation={{ filter_manager_recommendation }}{% endif %}{% if filter_interview_scheduled %}&interview_scheduled={{ filter_interview_scheduled }}{% endif %}{% if filter_department %}&department={{ filter_department|urlencode }}{% endif %}" class="btn btn-outline" style="text-decoration: none;">Previous</a>
+    {% endif %}
+    <span style="align-self: center; font-size: 0.875rem;">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+    {% if page_obj.has_next %}
+    <a href="?page={{ page_obj.next_page_number }}{% if search_q %}&q={{ search_q|urlencode }}{% endif %}{% if filter_application_status %}&application_status={{ filter_application_status }}{% endif %}{% if filter_manager_rating %}&manager_rating={{ filter_manager_rating }}{% endif %}{% if filter_manager_recommendation %}&manager_recommendation={{ filter_manager_recommendation }}{% endif %}{% if filter_interview_scheduled %}&interview_scheduled={{ filter_interview_scheduled }}{% endif %}{% if filter_department %}&department={{ filter_department|urlencode }}{% endif %}" class="btn btn-outline" style="text-decoration: none;">Next</a>
+    {% endif %}
+</nav>
+{% endif %}
+{% endblock %}

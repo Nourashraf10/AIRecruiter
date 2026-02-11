@@ -20,6 +20,7 @@
                 <th>Interviewer</th>
                 <th>Status</th>
                 <th>Meeting Link</th>
+                <th></th>
             </tr>
         </thead>
         <tbody>
@@ -31,8 +32,7 @@
                 <td>{{ interview.vacancy.title }}</td>
                 <td>
                     {{ interview.scheduled_at|date:"M d, Y" }}<br>
-                    <span style="color: var(--text-secondary); font-size: 0.75rem;">{{ interview.scheduled_at|date:"H:i"
-                        }}</span>
+                    <span style="color: var(--text-secondary); font-size: 0.75rem;">{{ interview.scheduled_at|date:"H:i" }}</span>
                 </td>
                 <td>{{ interview.manager.get_full_name|default:interview.manager.username }}</td>
                 <td>
@@ -51,10 +51,14 @@
                     -
                     {% endif %}
                 </td>
+                <td>
+                    <a href="{% url 'interview_edit' interview.pk %}" class="btn-outline"
+                        style="padding: 0.25rem 0.5rem; text-decoration: none; border-radius: 4px; font-size: 0.75rem;">Edit</a>
+                </td>
             </tr>
             {% empty %}
             <tr>
-                <td colspan="6" style="text-align:center; padding: 2rem;">
+                <td colspan="7" style="text-align:center; padding: 2rem;">
                     <p>No interviews scheduled.</p>
                 </td>
             </tr>

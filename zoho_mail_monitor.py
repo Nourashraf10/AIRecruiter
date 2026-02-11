@@ -303,6 +303,17 @@ class ZohoMailMonitor:
                     if p.get_content_type() == "text/plain":
                         body = p.get_payload(decode=True).decode('utf-8', errors='ignore')
                         break
+                # If no text/plain (HTML-only email), use text/html and strip tags so API can parse Manager Email etc.
+                if not body or not body.strip():
+                    for p in email_message.walk():
+                        if p.get_content_type() == "text/html":
+                            raw = p.get_payload(decode=True)
+                            if raw:
+                                import re
+                                html = raw.decode('utf-8', errors='ignore')
+                                body = re.sub(r'<[^>]+>', ' ', html)
+                                body = re.sub(r'\s+', ' ', body).strip()
+                            break
             else:
                 body = email_message.get_payload(decode=True).decode('utf-8', errors='ignore')
             

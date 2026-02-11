@@ -40,11 +40,11 @@
                     {% endif %}
                 </td>
                 <td>
-                    {% with app=candidate.applications.first %}
+                    {% with app=candidate.first_application %}
                     {% if app %}
                     {{ app.vacancy.title }}
                     {% else %}
-                    <span style="color: var(--text-secondary); font-style: italic;">No active application</span>
+                    <span style="color: var(--text-secondary); font-style: italic;">No application</span>
                     {% endif %}
                     {% endwith %}
                 </td>

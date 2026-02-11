@@ -1,5 +1,31 @@
 from django import forms
 from vacancies.models import Vacancy
+from interviews.models import Interview
+
+
+class DailySchedulingScheduleForm(forms.Form):
+    """Change the daily interview scheduling run time (hour and minute)."""
+    hour = forms.IntegerField(min_value=0, max_value=23, widget=forms.NumberInput(attrs={'class': 'form-control', 'min': 0, 'max': 23}))
+    minute = forms.IntegerField(min_value=0, max_value=59, widget=forms.NumberInput(attrs={'class': 'form-control', 'min': 0, 'max': 59}))
+
+
+class InterviewEditForm(forms.ModelForm):
+    """Edit interview date/time and duration (used on dashboard and portal)."""
+    scheduled_at = forms.DateTimeField(
+        input_formats=['%Y-%m-%dT%H:%M', '%Y-%m-%d %H:%M', '%Y-%m-%d %H:%M:%S'],
+        widget=forms.DateTimeInput(
+            attrs={'type': 'datetime-local', 'class': 'form-control'},
+            format='%Y-%m-%dT%H:%M',
+        ),
+    )
+
+    class Meta:
+        model = Interview
+        fields = ['scheduled_at', 'duration_minutes']
+        widgets = {
+            'duration_minutes': forms.NumberInput(attrs={'min': 15, 'max': 180, 'step': 15, 'class': 'form-control'}),
+        }
+
 
 class VacancyForm(forms.ModelForm):
     class Meta:

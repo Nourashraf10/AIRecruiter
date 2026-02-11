@@ -25,6 +25,13 @@ class Candidate(models.Model):
     def __str__(self):
         return f"{self.full_name} <{self.email}>"
 
+    def first_application(self):
+        """First application (via any of the candidate's CVs). Use prefetch_related('cvs__applications__vacancy') in the view to avoid N+1."""
+        for cv in self.cvs.all():
+            for app in cv.applications.all():
+                return app
+        return None
+
 class CV(models.Model):
     candidate = models.ForeignKey(Candidate, on_delete=models.CASCADE, related_name='cvs', null=True, blank=True)
     raw_file = models.FileField(upload_to='cvs/', null=True, blank=True, help_text='CV file (PDF, DOC, DOCX, TXT)')

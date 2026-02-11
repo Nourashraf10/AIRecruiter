@@ -33,6 +33,21 @@ def _extract_clean_email(email_str):
     return email_str.strip()
 
 
+def _normalize_email_body_for_parsing(body):
+    """Strip HTML and normalize line endings so 'Manager Email: x@y.com' etc. can be parsed from HTML emails."""
+    if not body:
+        return ''
+    body = body.replace('\r\n', '\n').replace('\r', '\n')
+    # Turn block boundaries into newlines so "Title: X</p><p>Manager Email: Y" becomes separate lines
+    body = re.sub(r'</(?:p|div|br|tr|li)\s*>', '\n', body, flags=re.IGNORECASE)
+    body = re.sub(r'<br\s*/?>', '\n', body, flags=re.IGNORECASE)
+    # Remove remaining HTML tags
+    body = re.sub(r'<[^>]+>', ' ', body)
+    body = re.sub(r'[ \t]+', ' ', body)  # collapse horizontal space only
+    body = re.sub(r'\n\s*\n', '\n', body)  # collapse multiple newlines
+    return body.strip()
+
+
 class InboundEmailView(APIView):
     authentication_classes = []
     permission_classes = []
@@ -94,8 +109,9 @@ class InboundEmailView(APIView):
                     'title': vacancy.title
                 }, status=status.HTTP_200_OK)
 
-        # Parse email body for vacancy details
-        payload = self._parse_vacancy_email(body)
+        # Parse email body for vacancy details (normalize first so HTML emails work)
+        body_for_parsing = _normalize_email_body_for_parsing(body)
+        payload = self._parse_vacancy_email(body_for_parsing or body)
         
         # Require a real title: reject default "New Vacancy" to avoid spam from repeated/malformed emails
         if not payload.get('title') or (payload['title'] or '').strip() == '' or payload['title'].strip().lower() == 'new vacancy':
@@ -104,6 +120,26 @@ class InboundEmailView(APIView):
             return Response({
                 "detail": "Skipped: body must include 'Title: <job title>' (e.g. Title: Senior Developer). No vacancy created.",
                 "incoming_email_id": incoming.id,
+            }, status=status.HTTP_200_OK)
+
+        # Idempotency: avoid duplicate vacancies when same email is processed multiple times (e.g. mailmonitor + Celery)
+        manager_email_parsed = _extract_clean_email((payload.get('manager_email') or '').strip())
+        from datetime import timedelta
+        recent = Vacancy.objects.filter(
+            title__iexact=(payload.get('title') or '').strip(),
+            created_at__gte=timezone.now() - timedelta(hours=1),
+        )
+        if manager_email_parsed:
+            recent = recent.filter(manager__email__iexact=manager_email_parsed)
+        else:
+            recent = recent.filter(manager__email__iexact=getattr(settings, 'DEFAULT_MANAGER_EMAIL', '') or '')
+        if recent.exists():
+            incoming.processed = True
+            incoming.save(update_fields=['processed'])
+            return Response({
+                "detail": "Vacancy already created for this Open Vacancy email (duplicate ignored).",
+                "incoming_email_id": incoming.id,
+                "existing_vacancy_id": recent.first().id,
             }, status=status.HTTP_200_OK)
         
         # Create or get the user who sent the email (use clean email in case of "Name <email>" format)
@@ -115,24 +151,39 @@ class InboundEmailView(APIView):
                 username=sender_email.split('@')[0]
             )
 
-        # Manager must exist or be created as minimal user
-        manager_email = _extract_clean_email(payload['manager_email'])
-        
-        # If no manager email provided, use default manager
-        if not manager_email or manager_email.strip() == '':
-            from django.conf import settings
-            manager_email = getattr(settings, 'DEFAULT_MANAGER_EMAIL', '')
-            if not manager_email:
-                raise ValueError("DEFAULT_MANAGER_EMAIL must be set in environment variables")
-            print(f"⚠️ No manager email provided, using default: {manager_email}")
-        
-        manager = User.objects.filter(email=manager_email).first()
+        # Manager from email body (e.g. "Manager Email: noureldin.ashraf@bit68.com") – only use default if missing
+        manager_email = _extract_clean_email((payload.get('manager_email') or '').strip())
+        if not manager_email:
+            # Last-resort: scan raw and normalized body for "Manager Email: x@y.com" (handles odd formatting/encoding)
+            for source in (body_for_parsing, body):
+                if not source:
+                    continue
+                m = re.search(r'Manager\s*Email\s*:\s*([a-zA-Z0-9_.+-]+@[a-zA-Z0-9_.-]+\.[a-zA-Z0-9]+)', source, re.IGNORECASE)
+                if m:
+                    manager_email = m.group(1).strip()
+                    break
+        if not manager_email:
+            manager_email = (getattr(settings, 'DEFAULT_MANAGER_EMAIL', None) or '').strip()
+            if manager_email:
+                import logging
+                logging.getLogger(__name__).info(f"No manager email in body, using default: {manager_email}")
+            else:
+                return Response(
+                    {"detail": "Manager email required. Include 'Manager Email: email@example.com' in the email body, or set DEFAULT_MANAGER_EMAIL in settings."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+        # Look up by email (case-insensitive); create minimal user if missing
+        manager_email_lower = manager_email.lower()
+        manager = User.objects.filter(email__iexact=manager_email_lower).first()
         if not manager:
+            # Use email as username to avoid clashes; normalize for uniqueness
             manager = User.objects.create(
                 email=manager_email,
-                username=manager_email.split('@')[0]
+                username=manager_email_lower.replace('@', '_at_').replace('.', '_')[:150]
             )
-            print(f"✅ Created new manager user: {manager_email}")
+            import logging
+            logging.getLogger(__name__).info(f"Created new manager user from Open Vacancy email: {manager_email}")
 
         # Create vacancy
         vacancy = Vacancy.objects.create(
@@ -207,7 +258,11 @@ class InboundEmailView(APIView):
             return ''
 
     def _parse_vacancy_email(self, body):
-        """Parse email body to extract vacancy details"""
+        """Parse email body to extract vacancy details. Handles \\r\\n, 'Manager Email:', 'Manager:', etc."""
+        if not body:
+            body = ''
+        # Normalize line endings so split works and values don't keep \\r
+        body = body.replace('\r\n', '\n').replace('\r', '\n')
         lines = body.strip().split('\n')
         payload = {}
         
@@ -216,13 +271,16 @@ class InboundEmailView(APIView):
             if ':' in line:
                 key, value = line.split(':', 1)
                 key = key.strip().lower().replace(' ', '_')
-                value = value.strip()
+                key = re.sub(r'_+', '_', key)  # collapse multiple underscores
+                value = value.strip().replace('\r', '')
                 
                 if key == 'title':
                     payload['title'] = value
                 elif key == 'department':
                     payload['department'] = value
-                elif key == 'manager_email':
+                elif key in ('manager_email', 'manageremail'):
+                    payload['manager_email'] = value
+                elif key == 'manager' and value and '@' in value:
                     payload['manager_email'] = value
                 elif key == 'keywords':
                     payload['keywords'] = value
@@ -237,6 +295,17 @@ class InboundEmailView(APIView):
                 elif key == 'questionnaire':
                     payload['questionnaire'] = value
         
+        # Fallback: extract manager email by regex if not found by line (e.g. HTML or wrapped lines)
+        if not payload.get('manager_email') and body:
+            for pattern in [
+                r'Manager\s+Email\s*:\s*(\S+@\S+)',
+                r'Manager\s*Email\s*:\s*(\S+@\S+)',
+                r'manager_email\s*:\s*(\S+@\S+)',
+            ]:
+                m = re.search(pattern, body, re.IGNORECASE)
+                if m:
+                    payload['manager_email'] = m.group(1).strip().replace('\r', '')
+                    break
         # Set defaults
         payload.setdefault('title', 'New Vacancy')
         payload.setdefault('department', 'General')

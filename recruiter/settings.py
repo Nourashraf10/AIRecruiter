@@ -168,7 +168,7 @@ CELERY_TIMEZONE = os.environ.get('CELERY_TIMEZONE', 'Africa/Cairo')  # Egypt tim
 CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
 
 # Celery Beat Schedule
-from celery.schedules import crontab
+from celery.schedules import crontab, schedule
 from datetime import timedelta
 
 CELERY_BEAT_SCHEDULE = {

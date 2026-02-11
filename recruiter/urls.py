@@ -28,15 +28,16 @@ from core.views import UserViewSet
 from vacancies.views import VacancyViewSet, GenerateShortlistView, ClearShortlistView
 from candidates.views import CandidateViewSet, ApplicationViewSet
 from comms.views import InboundEmailView, ManagerApprovalView, ApplicationCollectionView, EmailApplicationView, ApprovalLandingView, LinkedInApplicationInboundView
-from django.views.generic import TemplateView
+from django.views.generic import TemplateView, RedirectView
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_exempt
 from ai.views import CVAnalysisView, BulkCVAnalysisView, TopCandidatesView, CVUploadView, CVTextExtractionView
 from interviews.views import ScheduleInterviewsView, GetAvailableSlotsView, SendInterviewNotificationsView, DiscoverCalendarView
 from core.views import (
-    DashboardView, RecruitmentDashboardView, VacancyListView, VacancyCreateView, 
-    VacancyUpdateView, CandidateListView, InterviewListView
+    DashboardView, RecruitmentDashboardView, VacancyListView, VacancyCreateView,
+    VacancyUpdateView, CandidateListView, InterviewListView, InterviewUpdateView,
+    UpdateDailySchedulingScheduleView, CandidateProfileListView, CandidateProfileDetailView,
 )
 
 router = DefaultRouter()
@@ -46,6 +47,7 @@ router.register(r'candidates', CandidateViewSet)
 router.register(r'applications', ApplicationViewSet)
 
 urlpatterns = [
+    path('', RedirectView.as_view(url='/admin/', permanent=False), name='root_redirect'),
     path('admin/', admin.site.urls),
     path('admin/oauth-dashboard/', staff_member_required(TemplateView.as_view(template_name='admin/oauth_dashboard.html')), name='oauth_dashboard'),
     path('api/', include(router.urls)),
@@ -53,11 +55,15 @@ urlpatterns = [
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('api/dashboard/', DashboardView.as_view(), name='dashboard'),
     path('dashboard/', RecruitmentDashboardView.as_view(), name='recruiter_dashboard'),
+    path('dashboard/update-daily-scheduling/', UpdateDailySchedulingScheduleView.as_view(), name='update_daily_scheduling'),
     path('portal/vacancies/', VacancyListView.as_view(), name='vacancy_list'),
     path('portal/vacancies/create/', VacancyCreateView.as_view(), name='vacancy_create'),
     path('portal/vacancies/<int:pk>/edit/', VacancyUpdateView.as_view(), name='vacancy_update'),
     path('portal/candidates/', CandidateListView.as_view(), name='candidate_list'),
+    path('portal/candidate-profiles/', CandidateProfileListView.as_view(), name='candidate_profile_list'),
+    path('portal/candidate-profiles/<int:pk>/', CandidateProfileDetailView.as_view(), name='candidate_profile_detail'),
     path('portal/interviews/', InterviewListView.as_view(), name='interview_list'),
+    path('portal/interviews/<int:pk>/edit/', InterviewUpdateView.as_view(), name='interview_edit'),
     path('api/inbound/email/', InboundEmailView.as_view(), name='inbound_email'),
     path('api/inbound/linkedin-application/', LinkedInApplicationInboundView.as_view(), name='linkedin_application_inbound'),
     path('api/approve-vacancy/<str:approval_token>/', ManagerApprovalView.as_view(), name='manager_approval'),

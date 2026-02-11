@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ profile.candidate.full_name }} – {{ profile.vacancy.title }}{% endblock %}
+
+{% block content %}
+<div class="page-header" style="display: flex; justify-content: space-between; align-items: flex-start;">
+    <div>
+        <h1>Candidate profile</h1>
+        <p style="color:var(--text-secondary)">{{ profile.candidate.full_name }} · {{ profile.vacancy.title }}</p>
+    </div>
+    <a href="{% url 'candidate_profile_list' %}" class="btn btn-outline" style="text-decoration: none;">← Back to list</a>
+</div>
+
+<div class="card" style="margin-bottom: 1.5rem;">
+    <h2 style="font-size: 1rem; margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border-color);">Candidate &amp; Vacancy</h2>
+    <table style="width: 100%;">
+        <tr><td style="width: 180px; color: var(--text-secondary); padding: 0.5rem 0;">Candidate</td><td>{{ profile.candidate.full_name }} ({{ profile.candidate.email }})</td></tr>
+        <tr><td style="color: var(--text-secondary); padding: 0.5rem 0;">Vacancy</td><td>{{ profile.vacancy.title }} · {{ profile.vacancy.department }}</td></tr>
+    </table>
+</div>
+
+<div class="card" style="margin-bottom: 1.5rem;">
+    <h2 style="font-size: 1rem; margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border-color);">Application information</h2>
+    <table style="width: 100%;">
+        <tr><td style="width: 180px; color: var(--text-secondary); padding: 0.5rem 0;">Status</td><td>{{ profile.application_status|default:"—" }}</td></tr>
+        <tr><td style="color: var(--text-secondary); padding: 0.5rem 0;">Application date</td><td>{% if profile.application_date %}{{ profile.application_date|date:'M d, Y H:i' }}{% else %}—{% endif %}</td></tr>
+        <tr><td style="color: var(--text-secondary); padding: 0.5rem 0;">CV file name</td><td>{{ profile.cv_file_name|default:"—" }}</td></tr>
+    </table>
+</div>
+
+<div class="card" style="margin-bottom: 1.5rem;">
+    <h2 style="font-size: 1rem; margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border-color);">AI analysis</h2>
+    <table style="width: 100%;">
+        <tr><td style="width: 180px; color: var(--text-secondary); padding: 0.5rem 0;">AI score</td><td>{% if profile.ai_score %}{{ profile.ai_score }}{% else %}—{% endif %}</td></tr>
+        <tr><td style="color: var(--text-secondary); padding: 0.5rem 0;">AI analysis date</td><td>{% if profile.ai_analysis_date %}{{ profile.ai_analysis_date|date:'M d, Y H:i' }}{% else %}—{% endif %}</td></tr>
+        <tr><td style="color: var(--text-secondary); padding: 0.5rem 0; vertical-align: top;">AI analysis</td><td>{% if profile.ai_analysis %}<pre style="white-space: pre-wrap; font-family: inherit; margin: 0; font-size: 0.875rem;">{{ profile.ai_analysis }}</pre>{% else %}—{% endif %}</td></tr>
+        <tr><td style="color: var(--text-secondary); padding: 0.5rem 0; vertical-align: top;">AI score breakdown</td><td>{% if profile.ai_score_breakdown %}<pre style="white-space: pre-wrap; font-family: inherit; margin: 0; font-size: 0.8125rem;">{{ profile.ai_score_breakdown }}</pre>{% else %}—{% endif %}</td></tr>
+        <tr><td style="color: var(--text-secondary); padding: 0.5rem 0; vertical-align: top;">AI extracted data</td><td>{% if profile.ai_extracted_data %}<pre style="white-space: pre-wrap; font-family: inherit; margin: 0; font-size: 0.8125rem;">{{ profile.ai_extracted_data }}</pre>{% else %}—{% endif %}</td></tr>
+    </table>
+</div>
+
+<div class="card" style="margin-bottom: 1.5rem;">
+    <h2 style="font-size: 1rem; margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border-color);">Interview information</h2>
+    <table style="width: 100%;">
+        <tr><td style="width: 180px; color: var(--text-secondary); padding: 0.5rem 0;">Interview scheduled</td><td>{% if profile.interview_scheduled %}Yes{% else %}No{% endif %}</td></tr>
+        <tr><td style="color: var(--text-secondary); padding: 0.5rem 0;">Interview date</td><td>{% if profile.interview_date %}{{ profile.interview_date|date:'M d, Y H:i' }}{% else %}—{% endif %}</td></tr>
+        <tr><td style="color: var(--text-secondary); padding: 0.5rem 0;">Duration (minutes)</td><td>{% if profile.interview_duration %}{{ profile.interview_duration }}{% else %}—{% endif %}</td></tr>
+    </table>
+</div>
+
+<div class="card" style="margin-bottom: 1.5rem;">
+    <h2 style="font-size: 1rem; margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border-color);">Manager feedback</h2>
+    <table style="width: 100%;">
+        <tr><td style="width: 180px; color: var(--text-secondary); padding: 0.5rem 0;">Manager rating</td><td>{% if profile.manager_rating %}{{ profile.get_manager_rating_display }}{% else %}—{% endif %}</td></tr>
+        <tr><td style="color: var(--text-secondary); padding: 0.5rem 0;">Manager recommendation</td><td>{% if profile.manager_recommendation is True %}Yes{% elif profile.manager_recommendation is False %}No{% else %}—{% endif %}</td></tr>
+        <tr><td style="color: var(--text-secondary); padding: 0.5rem 0;">Feedback received</td><td>{% if profile.feedback_received_date %}{{ profile.feedback_received_date|date:'M d, Y H:i' }}{% else %}—{% endif %}</td></tr>
+        <tr><td style="color: var(--text-secondary); padding: 0.5rem 0;">Recommendation email sent</td><td>{% if profile.recommendation_email_sent %}Yes{% else %}No{% endif %}</td></tr>
+        <tr><td style="color: var(--text-secondary); padding: 0.5rem 0;">Recommendation email sent at</td><td>{% if profile.recommendation_email_sent_at %}{{ profile.recommendation_email_sent_at|date:'M d, Y H:i' }}{% else %}—{% endif %}</td></tr>
+        <tr><td style="color: var(--text-secondary); padding: 0.5rem 0; vertical-align: top;">Manager feedback</td><td>{% if profile.manager_feedback %}<pre style="white-space: pre-wrap; font-family: inherit; margin: 0; font-size: 0.875rem;">{{ profile.manager_feedback }}</pre>{% else %}—{% endif %}</td></tr>
+    </table>
+</div>
+
+<div class="card" style="margin-bottom: 1.5rem;">
+    <h2 style="font-size: 1rem; margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border-color);">Questionnaire response</h2>
+    <table style="width: 100%;">
+        <tr><td style="width: 180px; color: var(--text-secondary); padding: 0.5rem 0;">Response date</td><td>{% if profile.questionnaire_response_date %}{{ profile.questionnaire_response_date|date:'M d, Y H:i' }}{% else %}—{% endif %}</td></tr>
+        <tr><td style="color: var(--text-secondary); padding: 0.5rem 0; vertical-align: top;">Response</td><td>{% if profile.questionnaire_response %}<pre style="white-space: pre-wrap; font-family: inherit; margin: 0; font-size: 0.875rem;">{{ profile.questionnaire_response }}</pre>{% else %}—{% endif %}</td></tr>
+    </table>
+</div>
+
+<div class="card" style="margin-bottom: 1.5rem;">
+    <h2 style="font-size: 1rem; margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border-color);">Timestamps</h2>
+    <table style="width: 100%;">
+        <tr><td style="width: 180px; color: var(--text-secondary); padding: 0.5rem 0;">Created</td><td>{{ profile.created_at|date:'M d, Y H:i' }}</td></tr>
+        <tr><td style="color: var(--text-secondary); padding: 0.5rem 0;">Updated</td><td>{{ profile.updated_at|date:'M d, Y H:i' }}</td></tr>
+    </table>
+</div>
+{% endblock %}
