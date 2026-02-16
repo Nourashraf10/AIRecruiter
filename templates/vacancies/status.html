@@ -1,0 +1,237 @@
+{% extends 'base.html' %}
+
+{% block title %}Vacancy Status{% endblock %}
+
+{% block extra_css %}
+<style>
+    .section-card {
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 1.5rem;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        margin-bottom: 2rem;
+    }
+
+    .section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .section-title {
+        font-size: 1.125rem;
+        font-weight: 600;
+    }
+
+    .badge-count {
+        background: var(--accent-color);
+        color: white;
+        padding: 0.25rem 0.75rem;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+
+    .btn-success {
+        background: #10b981;
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 6px;
+        border: none;
+        cursor: pointer;
+        font-size: 0.875rem;
+        font-weight: 500;
+    }
+
+    .btn-success:hover {
+        background: #059669;
+    }
+
+    .btn-danger {
+        background: #ef4444;
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 6px;
+        border: none;
+        cursor: pointer;
+        font-size: 0.875rem;
+        font-weight: 500;
+    }
+
+    .btn-danger:hover {
+        background: #dc2626;
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 0.5rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+{% if messages %}
+<ul class="messages" style="list-style: none; margin-bottom: 1rem;">
+    {% for message in messages %}
+    <li style="padding: 0.75rem 1rem; border-radius: 8px; font-size: 0.875rem; margin-bottom: 0.5rem;
+        {% if message.tags == 'error' %}background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca;
+        {% elif message.tags == 'warning' %}background: #fef3c7; color: #92400e; border: 1px solid #fde68a;
+        {% else %}background: #ecfdf5; color: #166534; border: 1px solid #a7f3d0;{% endif %}">
+        {{ message }}
+    </li>
+    {% endfor %}
+</ul>
+{% endif %}
+
+<div class="page-header">
+    <div>
+        <h1>Vacancy Status</h1>
+        <p style="color:var(--text-secondary)">Manage and approve vacancies</p>
+    </div>
+</div>
+
+<!-- Pending Approval Section -->
+<div class="section-card">
+    <div class="section-header">
+        <div class="section-title">⏳ Pending Approval</div>
+        <span class="badge-count">{{ pending_vacancies.count }}</span>
+    </div>
+    {% if pending_vacancies %}
+    <table>
+        <thead>
+            <tr>
+                <th>Title</th>
+                <th>Department</th>
+                <th>Manager</th>
+                <th>Created</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for vacancy in pending_vacancies %}
+            <tr>
+                <td><strong>{{ vacancy.title }}</strong></td>
+                <td>{{ vacancy.department }}</td>
+                <td>{{ vacancy.manager.get_full_name|default:vacancy.manager.email }}</td>
+                <td>{{ vacancy.created_at|date:"M d, Y" }}</td>
+                <td>
+                    <div class="action-buttons">
+                        <form method="post" action="{% url 'approve_vacancy' vacancy.pk %}" style="display: inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="btn-success">✓ Approve</button>
+                        </form>
+                        <form method="post" action="{% url 'reject_vacancy' vacancy.pk %}" style="display: inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="btn-danger">✗ Reject</button>
+                        </form>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p style="color: var(--text-secondary); text-align: center; padding: 2rem;">No vacancies pending approval.</p>
+    {% endif %}
+</div>
+
+<!-- Approved Section -->
+<div class="section-card">
+    <div class="section-header">
+        <div class="section-title">✅ Approved</div>
+        <span class="badge-count">{{ approved_vacancies.count }}</span>
+    </div>
+    {% if approved_vacancies %}
+    <table>
+        <thead>
+            <tr>
+                <th>Title</th>
+                <th>Department</th>
+                <th>Manager</th>
+                <th>Created</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for vacancy in approved_vacancies %}
+            <tr>
+                <td><strong>{{ vacancy.title }}</strong></td>
+                <td>{{ vacancy.department }}</td>
+                <td>{{ vacancy.manager.get_full_name|default:vacancy.manager.email }}</td>
+                <td>{{ vacancy.created_at|date:"M d, Y" }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p style="color: var(--text-secondary); text-align: center; padding: 2rem;">No approved vacancies.</p>
+    {% endif %}
+</div>
+
+<!-- Active (Collecting Applications) Section -->
+<div class="section-card">
+    <div class="section-header">
+        <div class="section-title">🔄 Active (Collecting Applications)</div>
+        <span class="badge-count">{{ active_vacancies.count }}</span>
+    </div>
+    {% if active_vacancies %}
+    <table>
+        <thead>
+            <tr>
+                <th>Title</th>
+                <th>Department</th>
+                <th>Manager</th>
+                <th>Created</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for vacancy in active_vacancies %}
+            <tr>
+                <td><strong>{{ vacancy.title }}</strong></td>
+                <td>{{ vacancy.department }}</td>
+                <td>{{ vacancy.manager.get_full_name|default:vacancy.manager.email }}</td>
+                <td>{{ vacancy.created_at|date:"M d, Y" }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p style="color: var(--text-secondary); text-align: center; padding: 2rem;">No active vacancies.</p>
+    {% endif %}
+</div>
+
+<!-- Rejected Section -->
+<div class="section-card">
+    <div class="section-header">
+        <div class="section-title">❌ Rejected</div>
+        <span class="badge-count">{{ rejected_vacancies.count }}</span>
+    </div>
+    {% if rejected_vacancies %}
+    <table>
+        <thead>
+            <tr>
+                <th>Title</th>
+                <th>Department</th>
+                <th>Manager</th>
+                <th>Created</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for vacancy in rejected_vacancies %}
+            <tr>
+                <td><strong>{{ vacancy.title }}</strong></td>
+                <td>{{ vacancy.department }}</td>
+                <td>{{ vacancy.manager.get_full_name|default:vacancy.manager.email }}</td>
+                <td>{{ vacancy.created_at|date:"M d, Y" }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p style="color: var(--text-secondary); text-align: center; padding: 2rem;">No rejected vacancies.</p>
+    {% endif %}
+</div>
+{% endblock %}

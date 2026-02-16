@@ -430,7 +430,7 @@ class ManagerApprovalView(APIView):
             action = request.GET.get('action', '')
             
             # Show approval page
-            return render(request, 'admin/approval_page.html', {
+            return render(request, 'approval_landing.html', {
                 'vacancy': vacancy,
                 'approval_token': approval_token
             })
@@ -661,13 +661,13 @@ class ApprovalLandingView(View):
             # Find vacancy by approval token in meta field
             vacancy = Vacancy.objects.filter(meta__approval_token=approval_token).first()
             if not vacancy:
-                return render(request, 'admin/approval_page.html', {
+                return render(request, 'approval_landing.html', {
                     'error': 'Invalid approval token'
                 })
 
             action = request.POST.get('action')
             if action not in {'approve', 'reject'}:
-                return render(request, 'admin/approval_page.html', {
+                return render(request, 'approval_landing.html', {
                     'vacancy': vacancy,
                     'approval_token': approval_token,
                     'error': 'Invalid action'
@@ -677,12 +677,77 @@ class ApprovalLandingView(View):
                 vacancy.status = 'approved'
                 vacancy.save(update_fields=['status'])
                 
-                # Send email to HR about approved vacancy
-                subject = f"New Vacancy Approved: {vacancy.title}"
-                message = f"""
+                # NEW: Automatically post to LinkedIn
+                linkedin_result = None
+                linkedin_error = None
+                
+                if getattr(settings, 'LINKEDIN_POSTING_ENABLED', False):
+                    try:
+                        print(f"🤖 Starting automated LinkedIn posting for: {vacancy.title}")
+                        from ai.linkedin_poster import LinkedInVacancyPoster
+                        
+                        poster = LinkedInVacancyPoster(vacancy)
+                        linkedin_result = poster.execute()
+                        
+                        if linkedin_result['success']:
+                            print(f"✅ LinkedIn posting successful: {linkedin_result['url']}")
+                        else:
+                            linkedin_error = linkedin_result.get('error', 'Unknown error')
+                            print(f"❌ LinkedIn posting failed: {linkedin_error}")
+                    except Exception as e:
+                        linkedin_error = str(e)
+                        print(f"❌ LinkedIn automation error: {str(e)}")
+                        import traceback
+                        traceback.print_exc()
+                
+                # Send email to HR about the result
+                if linkedin_result and linkedin_result['success']:
+                    # Success: Job posted automatically
+                    subject = f"✅ Vacancy Posted to LinkedIn: {vacancy.title}"
+                    message = f"""
 Hello HR Team,
 
-A new vacancy has been approved and is ready to be posted on LinkedIn:
+Great news! The vacancy has been approved and automatically posted to LinkedIn:
+
+Vacancy: {vacancy.title}
+Department: {vacancy.department}
+Keywords: {vacancy.keywords}
+Manager: {vacancy.manager.get_full_name() or vacancy.manager.email}
+
+LinkedIn URL: {linkedin_result['url']}
+
+The system is now collecting applications automatically.
+
+Best regards,
+Fahmy
+"""
+                    html_content = f"""
+                    <p>Hello HR Team,</p>
+                    <p><strong>Great news!</strong> The vacancy has been approved and automatically posted to LinkedIn:</p>
+                    <ul>
+                      <li><strong>Vacancy:</strong> {vacancy.title}</li>
+                      <li><strong>Department:</strong> {vacancy.department}</li>
+                      <li><strong>Keywords:</strong> {vacancy.keywords}</li>
+                      <li><strong>Manager:</strong> {vacancy.manager.get_full_name() or vacancy.manager.email}</li>
+                    </ul>
+                    <p><strong>LinkedIn URL:</strong> <a href="{linkedin_result['url']}">{linkedin_result['url']}</a></p>
+                    <p>✅ The system is now collecting applications automatically.</p>
+                    <p>Best regards,<br/>Fahmy</p>
+                    """
+                else:
+                    # Failed or disabled: Manual posting required
+                    subject = f"New Vacancy Approved: {vacancy.title}"
+                    if linkedin_error:
+                        error_msg = f"\n\n⚠️ Automated LinkedIn posting failed: {linkedin_error}\nPlease post manually."
+                    elif not getattr(settings, 'LINKEDIN_POSTING_ENABLED', False):
+                        error_msg = "\n\nℹ️ Automated LinkedIn posting is disabled. Please post manually."
+                    else:
+                        error_msg = ""
+                    
+                    message = f"""
+Hello HR Team,
+
+A new vacancy has been approved:{error_msg}
 
 Vacancy: {vacancy.title}
 Department: {vacancy.department}
@@ -691,54 +756,63 @@ Manager: {vacancy.manager.get_full_name() or vacancy.manager.email}
 
 Please post this vacancy on LinkedIn to start collecting applications.
 
-Kindly reply with "Posted" to confirm posting. if you still didn't post it , don't reply.
+Kindly reply with "Posted" to confirm posting.
 
 Best regards,
 Fahmy
 """
-
-                # Send as HTML email to bold the instruction line
+                    html_content = f"""
+                    <p>Hello HR Team,</p>
+                    <p>A new vacancy has been approved:{error_msg.replace(chr(10), '<br/>')}</p>
+                    <ul>
+                      <li><strong>Vacancy:</strong> {vacancy.title}</li>
+                      <li><strong>Department:</strong> {vacancy.department}</li>
+                      <li><strong>Keywords:</strong> {vacancy.keywords}</li>
+                      <li><strong>Manager:</strong> {vacancy.manager.get_full_name() or vacancy.manager.email}</li>
+                    </ul>
+                    <p>Please post this vacancy on LinkedIn to start collecting applications.</p>
+                    <p><strong>Kindly reply with "Posted" to confirm posting.</strong></p>
+                    <p>Best regards,<br/>Fahmy</p>
+                    """
+                
+                # Send email
                 from django.core.mail import EmailMultiAlternatives
-                text_content = message
-                html_content = f"""
-                <p>Hello HR Team,</p>
-                <p>A new vacancy has been approved and is ready to be posted on LinkedIn:</p>
-                <ul>
-                  <li><strong>Vacancy:</strong> {vacancy.title}</li>
-                  <li><strong>Department:</strong> {vacancy.department}</li>
-                  <li><strong>Keywords:</strong> {vacancy.keywords}</li>
-                  <li><strong>Manager:</strong> {vacancy.manager.get_full_name() or vacancy.manager.email}</li>
-                </ul>
-                <p>Please post this vacancy on LinkedIn to start collecting applications.</p>
-                <p><strong>Kindly reply with "Posted" to confirm posting. if you still didn't post it , don't reply.</strong></p>
-                <p>Best regards,<br/>Fahmy</p>
-                """
                 email = EmailMultiAlternatives(
                     subject=subject,
-                    body=text_content,
+                    body=message,
                     from_email=settings.DEFAULT_FROM_EMAIL,
                     to=[getattr(settings, 'DEFAULT_MANAGER_EMAIL', settings.DEFAULT_FROM_EMAIL)]
                 )
                 email.attach_alternative(html_content, "text/html")
                 email.send(fail_silently=False)
                 
-                return render(request, 'admin/approval_page.html', {
+                # Prepare success message for user
+                success_msg = 'Vacancy approved successfully!'
+                if linkedin_result and linkedin_result['success']:
+                    success_msg += f' Job posted to LinkedIn: {linkedin_result["url"]}'
+                elif linkedin_error:
+                    success_msg += f' (LinkedIn posting failed: {linkedin_error})'
+                else:
+                    success_msg += ' HR has been notified to post manually.'
+                
+                return render(request, 'approval_landing.html', {
                     'vacancy': vacancy,
                     'approval_token': approval_token,
-                    'success': 'Vacancy approved successfully! HR has been notified.'
+                    'success': success_msg
                 })
+
                 
             elif action == 'reject':
                 vacancy.status = 'rejected'
                 vacancy.save(update_fields=['status'])
-                return render(request, 'admin/approval_page.html', {
+                return render(request, 'approval_landing.html', {
                     'vacancy': vacancy,
                     'approval_token': approval_token,
                     'success': 'Vacancy rejected successfully!'
                 })
                 
         except Exception as e:
-            return render(request, 'admin/approval_page.html', {
+            return render(request, 'approval_landing.html', {
                 'vacancy': vacancy if 'vacancy' in locals() else None,
                 'approval_token': approval_token,
                 'error': f'Error: {str(e)}'

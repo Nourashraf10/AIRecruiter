@@ -38,6 +38,7 @@ from core.views import (
     DashboardView, RecruitmentDashboardView, VacancyListView, VacancyCreateView,
     VacancyUpdateView, CandidateListView, InterviewListView, InterviewUpdateView,
     UpdateDailySchedulingScheduleView, CandidateProfileListView, CandidateProfileDetailView,
+    VacancyStatusView, ApproveVacancyView, RejectVacancyView,
 )
 
 router = DefaultRouter()
@@ -59,6 +60,9 @@ urlpatterns = [
     path('portal/vacancies/', VacancyListView.as_view(), name='vacancy_list'),
     path('portal/vacancies/create/', VacancyCreateView.as_view(), name='vacancy_create'),
     path('portal/vacancies/<int:pk>/edit/', VacancyUpdateView.as_view(), name='vacancy_update'),
+    path('portal/vacancies/status/', VacancyStatusView.as_view(), name='vacancy_status'),
+    path('portal/vacancies/<int:pk>/approve/', ApproveVacancyView.as_view(), name='approve_vacancy'),
+    path('portal/vacancies/<int:pk>/reject/', RejectVacancyView.as_view(), name='reject_vacancy'),
     path('portal/candidates/', CandidateListView.as_view(), name='candidate_list'),
     path('portal/candidate-profiles/', CandidateProfileListView.as_view(), name='candidate_profile_list'),
     path('portal/candidate-profiles/<int:pk>/', CandidateProfileDetailView.as_view(), name='candidate_profile_detail'),

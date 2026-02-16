@@ -290,3 +290,96 @@ class VacancyUpdateView(UpdateView):
     form_class = VacancyForm
     template_name = 'vacancies/form.html'
     success_url = reverse_lazy('vacancy_list')
+
+
+class VacancyStatusView(TemplateView):
+    """Show all vacancies grouped by status with approve/reject functionality."""
+    template_name = 'vacancies/status.html'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        
+        # Group vacancies by status
+        context['pending_vacancies'] = Vacancy.objects.filter(
+            status='awaiting_approval'
+        ).order_by('-created_at')
+        
+        context['approved_vacancies'] = Vacancy.objects.filter(
+            status='approved'
+        ).order_by('-created_at')[:10]
+        
+        context['rejected_vacancies'] = Vacancy.objects.filter(
+            status='rejected'
+        ).order_by('-created_at')[:10]
+        
+        context['active_vacancies'] = Vacancy.objects.filter(
+            status='collecting_applications'
+        ).order_by('-created_at')[:10]
+        
+        return context
+
+
+class ApproveVacancyView(View):
+    """Approve a vacancy and trigger LinkedIn automation."""
+    
+    def post(self, request, pk):
+        try:
+            vacancy = Vacancy.objects.get(pk=pk)
+            vacancy.status = 'approved'
+            vacancy.save()
+            
+            # Trigger LinkedIn automation (same as email approval flow)
+            from ai.linkedin_poster import LinkedInVacancyPoster
+            from django.conf import settings
+            
+            if getattr(settings, 'LINKEDIN_POSTING_ENABLED', False):
+                try:
+                    print(f"🤖 Starting automated LinkedIn posting for: {vacancy.title}")
+                    poster = LinkedInVacancyPoster(vacancy)
+                    linkedin_result = poster.execute()
+                    
+                    if linkedin_result and linkedin_result.get('success'):
+                        messages.success(
+                            request, 
+                            f'Vacancy "{vacancy.title}" approved and posted to LinkedIn! URL: {linkedin_result.get("url", "N/A")}'
+                        )
+                    else:
+                        error_msg = linkedin_result.get('error', 'Unknown error') if linkedin_result else 'No result returned'
+                        messages.warning(
+                            request, 
+                            f'Vacancy "{vacancy.title}" approved, but LinkedIn posting failed: {error_msg}'
+                        )
+                except Exception as e:
+                    messages.warning(
+                        request, 
+                        f'Vacancy "{vacancy.title}" approved, but LinkedIn posting error: {str(e)}'
+                    )
+                    import traceback
+                    traceback.print_exc()
+            else:
+                messages.success(request, f'Vacancy "{vacancy.title}" approved. (LinkedIn posting is disabled)')
+            
+        except Vacancy.DoesNotExist:
+            messages.error(request, 'Vacancy not found.')
+        except Exception as e:
+            messages.error(request, f'Error approving vacancy: {str(e)}')
+        
+        return redirect('vacancy_status')
+
+
+class RejectVacancyView(View):
+    """Reject a vacancy."""
+    
+    def post(self, request, pk):
+        try:
+            vacancy = Vacancy.objects.get(pk=pk)
+            vacancy.status = 'rejected'
+            vacancy.save()
+            messages.success(request, f'Vacancy "{vacancy.title}" rejected.')
+        except Vacancy.DoesNotExist:
+            messages.error(request, 'Vacancy not found.')
+        except Exception as e:
+            messages.error(request, f'Error rejecting vacancy: {str(e)}')
+        
+        return redirect('vacancy_status')
+

@@ -5,6 +5,9 @@ Django settings for recruiter project.
 from pathlib import Path
 import os
 from decouple import config
+from celery.schedules import crontab, schedule
+from datetime import timedelta
+
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -197,3 +200,13 @@ CELERY_BEAT_SCHEDULE = {
         "schedule": timedelta(seconds=5),  # Every 5 seconds
     },
 }
+
+# OpenAI Configuration
+OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY', '')
+
+# LinkedIn Automation Configuration
+LINKEDIN_EMAIL = os.environ.get('LINKEDIN_EMAIL', '')
+LINKEDIN_PASSWORD = os.environ.get('LINKEDIN_PASSWORD', '')
+LINKEDIN_COMPANY_PAGE = os.environ.get('LINKEDIN_COMPANY_PAGE', '')
+LINKEDIN_POSTING_ENABLED = os.environ.get('LINKEDIN_POSTING_ENABLED', 'False') == 'True'
+LINKEDIN_HEADLESS = os.environ.get('LINKEDIN_HEADLESS', 'True') == 'True'
