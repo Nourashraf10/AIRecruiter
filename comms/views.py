@@ -12,6 +12,7 @@ from core.models import User
 from vacancies.models import Vacancy
 import re
 import uuid
+import logging
 from django.shortcuts import render, redirect
 from django.views import View
 from django.urls import reverse
@@ -19,6 +20,10 @@ from candidates.models import Application, CV
 from rest_framework.permissions import AllowAny
 from rest_framework.parsers import MultiPartParser, FormParser
 from django.core.mail import send_mail
+from .tasks import post_vacancy_to_facebook_sync
+from core.email_utils import email_subject
+
+logger = logging.getLogger(__name__)
 
 
 
@@ -348,10 +353,13 @@ Fahmy
 {recruiter_email}
         """.strip()
 
-        # Store outgoing email record
+        # Store outgoing email record (subject must follow [bit68 - <text>] policy)
+        subject_template = getattr(settings, 'APPROVAL_EMAIL_SUBJECT', '{title}')
+        raw_subject = subject_template.format(title=vacancy.title)
+        subject = email_subject(raw_subject)
         outgoing_email = OutgoingEmail.objects.create(
             to_address=manager.email,
-            subject=f"Vacancy Approval Required: {vacancy.title}",
+            subject=subject,
             body=email_body,
             meta={"vacancy_id": vacancy.id, "approval_token": approval_token}
         )
@@ -616,13 +624,20 @@ class EmailApplicationView(APIView):
         return None
 
 
+def _normalize_vacancy_title(title):
+    """Normalize vacancy title for matching: strip and collapse multiple spaces."""
+    if not title:
+        return ''
+    return re.sub(r'\s+', ' ', title.strip())
+
+
 class LinkedInApplicationInboundView(APIView):
     authentication_classes = []
     permission_classes = [AllowAny]
     parser_classes = [MultiPartParser, FormParser]
     
     def post(self, request):
-        vacancy_title = (request.data.get('vacancy_title') or '').strip()
+        vacancy_title = _normalize_vacancy_title((request.data.get('vacancy_title') or ''))
         candidate_name = (request.data.get('candidate_name') or '').strip()
         candidate_email = (request.data.get('candidate_email') or '').strip()
         cv_file = request.FILES.get('cv_file')
@@ -630,6 +645,14 @@ class LinkedInApplicationInboundView(APIView):
             return Response({'error': 'vacancy_title and cv_file are required'}, status=status.HTTP_400_BAD_REQUEST)
         vacancy = Vacancy.objects.filter(title__iexact=vacancy_title).first()
         if not vacancy:
+            # Fallback: try case-insensitive contains; use if exactly one match
+            candidates = list(Vacancy.objects.filter(title__icontains=vacancy_title).order_by('title'))
+            if len(candidates) == 1:
+                vacancy = candidates[0]
+                logger.info(f"LinkedIn inbound: matched vacancy by contains: '{vacancy_title}' -> '{vacancy.title}'")
+        if not vacancy:
+            similar = list(Vacancy.objects.filter(title__icontains=vacancy_title.split()[0] if vacancy_title else '').values_list('title', flat=True)[:5])
+            logger.warning(f"LinkedIn inbound: vacancy not found for title='{vacancy_title}'. Similar titles: {similar}")
             return Response({'error': f'Vacancy "{vacancy_title}" not found'}, status=status.HTTP_400_BAD_REQUEST)
         # Create CV
         cv = CV.objects.create(raw_file=cv_file)
@@ -661,13 +684,15 @@ class ApprovalLandingView(View):
             # Find vacancy by approval token in meta field
             vacancy = Vacancy.objects.filter(meta__approval_token=approval_token).first()
             if not vacancy:
-                return render(request, 'admin/approval_page.html', {
+                return render(request, 'approval_landing.html', {
+                    'vacancy': None,
+                    'approval_token': approval_token,
                     'error': 'Invalid approval token'
                 })
 
             action = request.POST.get('action')
             if action not in {'approve', 'reject'}:
-                return render(request, 'admin/approval_page.html', {
+                return render(request, 'approval_landing.html', {
                     'vacancy': vacancy,
                     'approval_token': approval_token,
                     'error': 'Invalid action'
@@ -676,43 +701,50 @@ class ApprovalLandingView(View):
             if action == 'approve':
                 vacancy.status = 'approved'
                 vacancy.save(update_fields=['status'])
-                
-                # Send email to HR about approved vacancy
+
+                # Trigger automatic Facebook posting synchronously. This uses the
+                # Playwright-based automation and will move the vacancy to
+                # collecting_applications on success.
+                print(f"🚀 Starting Facebook post for vacancy {vacancy.id} ({vacancy.title})")
+                fb_result = post_vacancy_to_facebook_sync(vacancy.id)
+                if not fb_result.get("success"):
+                    print(f"❌ Facebook posting failed for vacancy {vacancy.id}: {fb_result.get('error')}")
+                    status_msg = 'Vacancy approved, but Facebook posting failed. Please post manually.'
+                else:
+                    status_msg = 'Vacancy approved successfully! HR has been notified and Facebook posting is being handled automatically.'
+
+                # Notify HR that the vacancy has been approved and is being auto-posted.
                 subject = f"New Vacancy Approved: {vacancy.title}"
                 message = f"""
 Hello HR Team,
 
-A new vacancy has been approved and is ready to be posted on LinkedIn:
+A new vacancy has been approved and is being automatically posted on Facebook:
 
 Vacancy: {vacancy.title}
 Department: {vacancy.department}
 Keywords: {vacancy.keywords}
 Manager: {vacancy.manager.get_full_name() or vacancy.manager.email}
 
-Please post this vacancy on LinkedIn to start collecting applications.
-
-Kindly reply with "Posted" to confirm posting. if you still didn't post it , don't reply.
+No manual posting is required. The AI recruiter will handle the Facebook post.
 
 Best regards,
 Fahmy
-"""
+""".strip()
 
-                # Send as HTML email to bold the instruction line
                 from django.core.mail import EmailMultiAlternatives
                 text_content = message
                 html_content = f"""
                 <p>Hello HR Team,</p>
-                <p>A new vacancy has been approved and is ready to be posted on LinkedIn:</p>
+                <p>A new vacancy has been approved and is being automatically posted on Facebook:</p>
                 <ul>
                   <li><strong>Vacancy:</strong> {vacancy.title}</li>
                   <li><strong>Department:</strong> {vacancy.department}</li>
                   <li><strong>Keywords:</strong> {vacancy.keywords}</li>
                   <li><strong>Manager:</strong> {vacancy.manager.get_full_name() or vacancy.manager.email}</li>
                 </ul>
-                <p>Please post this vacancy on LinkedIn to start collecting applications.</p>
-                <p><strong>Kindly reply with "Posted" to confirm posting. if you still didn't post it , don't reply.</strong></p>
+                <p><strong>No manual posting is required. The AI recruiter is handling the Facebook post.</strong></p>
                 <p>Best regards,<br/>Fahmy</p>
-                """
+                """.strip()
                 email = EmailMultiAlternatives(
                     subject=subject,
                     body=text_content,
@@ -722,23 +754,25 @@ Fahmy
                 email.attach_alternative(html_content, "text/html")
                 email.send(fail_silently=False)
                 
-                return render(request, 'admin/approval_page.html', {
+                return render(request, 'approval_landing.html', {
                     'vacancy': vacancy,
                     'approval_token': approval_token,
-                    'success': 'Vacancy approved successfully! HR has been notified.'
+                    'success': status_msg
                 })
                 
             elif action == 'reject':
                 vacancy.status = 'rejected'
                 vacancy.save(update_fields=['status'])
-                return render(request, 'admin/approval_page.html', {
+                return render(request, 'approval_landing.html', {
                     'vacancy': vacancy,
                     'approval_token': approval_token,
                     'success': 'Vacancy rejected successfully!'
                 })
                 
         except Exception as e:
-            return render(request, 'admin/approval_page.html', {
+            import traceback
+            traceback.print_exc()
+            return render(request, 'approval_landing.html', {
                 'vacancy': vacancy if 'vacancy' in locals() else None,
                 'approval_token': approval_token,
                 'error': f'Error: {str(e)}'

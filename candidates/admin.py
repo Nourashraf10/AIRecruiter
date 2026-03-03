@@ -6,7 +6,8 @@ from django.urls import path, reverse
 from django import forms
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
-from .models import Candidate, CV, Application, QuestionnaireResponse, CandidateProfile, CandidateVacancyProfile
+from .models import Candidate, CV, Application, QuestionnaireResponse, CandidateProfile, CandidateVacancyProfile, BlueCollarLead
+from .signals import _send_questionnaire_email_for_application
 from vacancies.models import Vacancy
 from ai.services import AIService
 from django.db import transaction
@@ -130,8 +131,24 @@ class ApplicationAdmin(admin.ModelAdmin):
     list_display = ("id", "vacancy", "cv", "candidate_name", "status", "created_at")
     list_filter = ("status", "vacancy")
     search_fields = ("vacancy__title", "cv__candidate__full_name", "cv__candidate__email")
-    actions = ['upload_cv_action']
-    
+    actions = ['upload_cv_action', 'send_questionnaire_email_action']
+
+    def send_questionnaire_email_action(self, request, queryset):
+        """Send questionnaire email to selected applications' candidates (skips if already sent for that vacancy)."""
+        sent = 0
+        for app in queryset:
+            if app.cv and app.cv.candidate and app.cv.candidate.email:
+                try:
+                    if _send_questionnaire_email_for_application(app):
+                        sent += 1
+                except Exception as e:
+                    self.message_user(request, f"Failed for {app}: {e}", level=messages.ERROR)
+        if sent:
+            self.message_user(request, f"Questionnaire email sent for {sent} application(s).", level=messages.SUCCESS)
+        else:
+            self.message_user(request, "No questionnaire emails sent (already sent for selected or failed).", level=messages.WARNING)
+    send_questionnaire_email_action.short_description = "Send questionnaire email to candidate(s)"
+
     def candidate_name(self, obj):
         return obj.cv.candidate.full_name if obj.cv and obj.cv.candidate else "No Candidate"
     candidate_name.short_description = "Candidate"
@@ -297,6 +314,13 @@ class CandidateVacancyProfileAdmin(admin.ModelAdmin):
     
     def get_queryset(self, request):
         return super().get_queryset(request).select_related('candidate', 'vacancy')
+
+
+@admin.register(BlueCollarLead)
+class BlueCollarLeadAdmin(admin.ModelAdmin):
+    list_display = ('full_name', 'phone', 'vacancy', 'created_at')
+    search_fields = ('full_name', 'phone', 'vacancy__title')
+    list_filter = ('vacancy__department', 'created_at')
     
     def get_urls(self):
         urls = super().get_urls()

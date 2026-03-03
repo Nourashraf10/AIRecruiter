@@ -3,7 +3,15 @@ Celery tasks for the AI Recruiter application
 """
 
 import logging
-from celery import shared_task
+
+try:
+    from celery import shared_task
+except ImportError:
+    def shared_task(*args, **kwargs):
+        def decorator(f):
+            return f
+        return decorator
+
 from django.utils import timezone
 from .daily_automation_service import DailyAutomationService
 
@@ -161,3 +169,92 @@ def check_vacancy_emails(self):
     except Exception as e:
         logger.exception("Vacancy email check failed")
         return {'success': False, 'error': str(e)}
+
+
+def post_vacancy_to_facebook_sync(vacancy_id: int) -> dict:
+    """
+    Synchronous helper that posts an approved vacancy as a regular Facebook post
+    using the Playwright automation in ai_recruiter.posting.facebook_poster.
+
+    This can be called directly from Django views (blocking) or wrapped by a
+    Celery task for background execution.
+    """
+    print(f"📤 [post_vacancy_to_facebook_sync] Starting for vacancy_id={vacancy_id}")
+    try:
+        from vacancies.models import Vacancy
+        from django.conf import settings
+        from ai_recruiter.posting import JobPosting
+        from ai_recruiter.posting.facebook_poster import FacebookPoster
+        import os
+
+        try:
+            vacancy = Vacancy.objects.get(id=vacancy_id)
+        except Vacancy.DoesNotExist:
+            msg = f"Vacancy {vacancy_id} not found for Facebook posting"
+            print(f"❌ [post_vacancy_to_facebook_sync] {msg}")
+            logger.error(msg)
+            return {"success": False, "error": msg}
+
+        # Basic description assembled from existing fields; you can refine this later.
+        description_lines = [
+            f"Department: {vacancy.department}",
+        ]
+        if vacancy.keywords:
+            description_lines.append(f"Keywords: {vacancy.keywords}")
+        if vacancy.questionnaire_template:
+            description_lines.append("")
+            description_lines.append(vacancy.questionnaire_template)
+
+        # Blue-collar apply link: simple page to capture name + mobile for this vacancy
+        base_url = os.environ.get('DJANGO_BASE_URL', 'http://localhost:8040')
+        apply_url = f"{base_url}/blue-collar/apply/{vacancy.id}/"
+        description_lines.append("")
+        description_lines.append(f"To apply (blue collars): fill your name and mobile here: {apply_url}")
+
+        description = "\n".join(description_lines)
+
+        # Location: use a setting if available, otherwise fall back to a sensible default.
+        default_location = getattr(settings, "DEFAULT_JOB_LOCATION", "Cairo, Egypt")
+
+        job = JobPosting(
+            title=vacancy.title,
+            description=description,
+            location=default_location,
+            company_name=getattr(settings, "COMPANY_NAME", None),
+        )
+
+        # When a saved Facebook storage state exists, the credentials passed here
+        # are effectively ignored; they are kept for compatibility with the BasePoster.
+        poster = FacebookPoster(email="", password="")
+        poster.post_job(job)
+        # Also post to configured groups (e.g. "Test Posting") if any in facebook.json "groups".
+        poster.post_job_to_groups(job)
+
+        # On success, mark vacancy as collecting applications so downstream
+        # automation can pick it up.
+        vacancy.status = "collecting_applications"
+        vacancy.linkedin_posted_at = timezone.now()
+        vacancy.save(update_fields=["status", "linkedin_posted_at"])
+
+        print(f"✅ [post_vacancy_to_facebook_sync] Posted vacancy {vacancy.id} to Facebook and moved to collecting_applications")
+        logger.info(f"✅ Posted vacancy {vacancy.id} to Facebook and moved to collecting_applications")
+        return {"success": True, "vacancy_id": vacancy.id}
+    except Exception as e:
+        logger.exception("Facebook posting failed for vacancy_id=%s", vacancy_id)
+        print(f"❌ [post_vacancy_to_facebook_sync] Exception: {e!r}")
+        return {"success": False, "error": str(e)}
+
+
+@shared_task(bind=True, max_retries=3, name="comms.tasks.post_vacancy_to_facebook")
+def post_vacancy_to_facebook(self, vacancy_id: int):
+    """
+    Celery wrapper around post_vacancy_to_facebook_sync so it can run in the
+    background worker.
+    """
+    try:
+        return post_vacancy_to_facebook_sync(vacancy_id)
+    except Exception as exc:
+        print(f"❌ [post_vacancy_to_facebook] Failed for vacancy_id={vacancy_id}: {exc}")
+        logger.exception(f"❌ Failed to post vacancy {vacancy_id} to Facebook")
+        # Retry with exponential backoff
+        raise self.retry(exc=exc, countdown=60 * (2 ** self.request.retries))

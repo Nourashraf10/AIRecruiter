@@ -1,4 +1,11 @@
-from celery import shared_task
+try:
+    from celery import shared_task
+except ImportError:
+    def shared_task(*args, **kwargs):
+        def decorator(f):
+            return f
+        return decorator
+
 from django.utils import timezone
 from datetime import timedelta
 from .models import Interview

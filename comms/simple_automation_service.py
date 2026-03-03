@@ -13,6 +13,7 @@ from core.models import User
 from vacancies.models import Vacancy, Shortlist
 from candidates.models import Candidate, Application
 from comms.models import OutgoingEmail
+from core.email_utils import email_subject
 
 logger = logging.getLogger(__name__)
 
@@ -189,7 +190,7 @@ Fahmy
     def _send_candidate_notification(self, vacancy: Vacancy, candidate: Candidate) -> Dict[str, Any]:
         """Send notification email to candidate"""
         try:
-            subject = f"Interview Invitation - {vacancy.title}"
+            subject = email_subject(f"Interview Invitation - {vacancy.title}")
             
             message = f"""
 Dear {candidate.full_name},

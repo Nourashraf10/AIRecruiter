@@ -223,3 +223,27 @@ class ClearShortlistView(View):
                 'success': False,
                 'error': str(e)
             })
+
+
+@method_decorator([staff_member_required, csrf_exempt], name='dispatch')
+class PostToFacebookView(View):
+    """Admin view to manually post a vacancy to Facebook (same as automatic post on manager approval)."""
+
+    def post(self, request, vacancy_id):
+        try:
+            from comms.tasks import post_vacancy_to_facebook_sync
+            vacancy = Vacancy.objects.get(id=vacancy_id)
+            result = post_vacancy_to_facebook_sync(vacancy_id)
+            if result.get("success"):
+                return JsonResponse({
+                    "success": True,
+                    "message": f"Vacancy '{vacancy.title}' posted to Facebook and set to collecting applications.",
+                })
+            return JsonResponse({
+                "success": False,
+                "error": result.get("error", "Unknown error"),
+            })
+        except Vacancy.DoesNotExist:
+            return JsonResponse({"success": False, "error": "Vacancy not found"})
+        except Exception as e:
+            return JsonResponse({"success": False, "error": str(e)})

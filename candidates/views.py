@@ -1,7 +1,11 @@
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from .models import Candidate, Application
+from django.views import View
+from django.shortcuts import render, get_object_or_404
+
+from vacancies.models import Vacancy
+from .models import Candidate, Application, BlueCollarLead
 from .serializers import CandidateSerializer, ApplicationSerializer
 
 class CandidateViewSet(viewsets.ModelViewSet):
@@ -45,4 +49,51 @@ class ApplicationViewSet(viewsets.ModelViewSet):
             "matched_count": matched,
             "total_keywords": len(keywords),
             "matched_keywords": matched_list,
+        })
+
+
+class BlueCollarApplyView(View):
+    """Simple public form for blue-collar applicants (name + mobile only)."""
+    template_name = 'blue_collar/apply.html'
+
+    def get(self, request, vacancy_id: int):
+        vacancy = get_object_or_404(Vacancy, id=vacancy_id)
+        return render(request, self.template_name, {
+            'vacancy': vacancy,
+            'submitted': False,
+            'errors': [],
+            'name': '',
+            'phone': '',
+        })
+
+    def post(self, request, vacancy_id: int):
+        vacancy = get_object_or_404(Vacancy, id=vacancy_id)
+        name = (request.POST.get('name') or '').strip()
+        phone = (request.POST.get('phone') or '').strip()
+        errors = []
+        if not name:
+            errors.append("Name is required.")
+        if not phone:
+            errors.append("Mobile number is required.")
+
+        if errors:
+            return render(request, self.template_name, {
+                'vacancy': vacancy,
+                'submitted': False,
+                'errors': errors,
+                'name': name,
+                'phone': phone,
+            })
+
+        BlueCollarLead.objects.create(
+            full_name=name,
+            phone=phone,
+            vacancy=vacancy,
+        )
+        return render(request, self.template_name, {
+            'vacancy': vacancy,
+            'submitted': True,
+            'errors': [],
+            'name': '',
+            'phone': '',
         })

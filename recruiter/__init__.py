@@ -1,5 +1,9 @@
 # This will make sure the app is always imported when
 # Django starts so that shared_task will use this app.
-from .celery_app import app as celery_app
+# If celery is not installed, app runs without background tasks.
+try:
+    from .celery_app import app as celery_app
+except ImportError:
+    celery_app = None
 
-_all_ = ("celery_app",)
+__all__ = ("celery_app",)

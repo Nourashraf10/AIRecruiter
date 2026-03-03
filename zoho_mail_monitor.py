@@ -118,7 +118,9 @@ class ZohoMailMonitor:
         self.processed_linkedin_uids = self._load_processed_uids_from_file(self._processed_linkedin_uids_file)
         self._processed_feedback_uids_file = os.path.join(script_dir, '.zoho_processed_feedback_uids.txt')
         self.processed_feedback_uids = self._load_processed_uids_from_file(self._processed_feedback_uids_file)
-        
+        self._processed_questionnaire_uids_file = os.path.join(script_dir, '.zoho_processed_questionnaire_uids.txt')
+        self.processed_questionnaire_uids = self._load_processed_uids_from_file(self._processed_questionnaire_uids_file)
+
         # Test Django API connection on startup
         self._test_django_connection()
 
@@ -372,8 +374,10 @@ class ZohoMailMonitor:
     def mark_email_as_read(self, mail, uid_str):
         """Mark email as read by IMAP UID."""
         try:
-            mail.uid('STORE', uid_str, '+FLAGS', '\\Seen')
-            logger.info(f"✅ Marked email (UID {uid_str}) as read")
+            # Use numeric UID and flags in (\\Seen) form to avoid server syntax errors
+            uid_val = int(uid_str) if isinstance(uid_str, str) and uid_str.isdigit() else uid_str
+            mail.uid('STORE', uid_val, '+FLAGS', '(\\Seen)')
+            logger.info(f"✅ Marked email (UID {uid_val}) as read")
         except Exception as e:
             logger.error(f"❌ Failed to mark email as read: {str(e)}")
 
@@ -540,7 +544,10 @@ class ZohoMailMonitor:
                     if resp.status_code in (200, 201):
                         logger.info(f"✅ LinkedIn application posted to Django via {url}")
                         return True
-                    logger.error(f"❌ Django LinkedIn inbound error: {resp.status_code} - {resp.text} via {url}")
+                    logger.error(
+                        f"❌ Django LinkedIn inbound error: {resp.status_code} - {resp.text} via {url} "
+                        f"(vacancy_title={vacancy_title!r}; email not marked read, will retry)"
+                    )
                 except Exception as e:
                     last_err = e
                     continue
@@ -666,8 +673,12 @@ class ZohoMailMonitor:
 
                 vacancy_title = self.parse_vacancy_from_email(subject, body)
                 filename, file_bytes = self.extract_first_cv_attachment(msg)
+                logger.info(f"LinkedIn email UID {uid_str}: subject={subject[:60]!r}, vacancy_title={vacancy_title!r}, has_cv={bool(filename and file_bytes)}")
                 if not filename or not file_bytes or not vacancy_title:
-                    logger.warning(f"Skipping UID {uid_str} - missing vacancy or CV (subject: {subject[:50]}...)")
+                    logger.warning(
+                        f"Skipping UID {uid_str} - missing vacancy or CV: subject={subject[:80]!r}, "
+                        f"parsed_vacancy_title={vacancy_title!r}, has_attachment={bool(filename and file_bytes)}"
+                    )
                     self.mark_email_as_read(mail, uid_str)
                     self.processed_linkedin_uids.add(uid_str)
                     self._save_processed_uid_to_file(uid_str, getattr(self, '_processed_linkedin_uids_file', None))
@@ -930,21 +941,47 @@ class ZohoMailMonitor:
                             print(f"⚠️ Could not extract candidate email from: {from_email}")
                             continue
                         
-                        # Find corresponding candidate vacancy profile by email
+                        # Find profile for this reply: match by vacancy from subject
+                        # Normalize subject: replies may be "Re: [bit68 - Pre-Interview Questions - Title]"
                         from candidates.models import CandidateVacancyProfile
-                        profile = CandidateVacancyProfile.objects.filter(
+                        _subj = (subject or "").strip().replace("Re:", "").strip()
+                        if _subj.startswith("[bit68 - ") and _subj.endswith("]"):
+                            _subj = _subj[9:-1].strip()
+                        vacancy_title = None
+                        m = re.search(r'Pre-Interview\s+Questions\s*-\s*(.+)', _subj, re.IGNORECASE)
+                        if m:
+                            vacancy_title = m.group(1).strip().rstrip("]").strip()
+                        if not vacancy_title:
+                            m = re.search(r'Questionnaire\s*-\s*(.+)', _subj, re.IGNORECASE)
+                            if m:
+                                vacancy_title = m.group(1).strip().rstrip("]").strip()
+                        if not vacancy_title:
+                            m = re.search(r'Pre-Interview\s+Questionnaire\s*-\s*(.+)', _subj, re.IGNORECASE)
+                            if m:
+                                vacancy_title = m.group(1).strip().rstrip("]").strip()
+
+                        base_qs = CandidateVacancyProfile.objects.filter(
                             candidate__email__iexact=candidate_email
-                        ).first()
-                        
-                        if not profile:
+                        ).select_related('vacancy').order_by('-created_at')
+                        if not base_qs.exists():
                             print(f"⚠️ No profile found for candidate email: {candidate_email}")
                             continue
-                        
+
+                        if vacancy_title:
+                            profile = base_qs.filter(vacancy__title__iexact=vacancy_title).first()
+                            if not profile:
+                                print(f"⚠️ No profile for vacancy '{vacancy_title}' and {candidate_email} — skipping reply (wrong vacancy)")
+                                continue
+                        else:
+                            profile = base_qs.first()
+                            print(f"⚠️ Could not extract vacancy from subject, using most recent profile for {candidate_email}")
+
                         # Update profile with questionnaire response
                         profile.questionnaire_response = body
                         profile.questionnaire_response_date = timezone.now()
                         profile.save()
-                        
+                        from candidates.signals import rescore_profile_after_questionnaire
+                        rescore_profile_after_questionnaire(profile)
                         print(f"✅ Saved questionnaire response for {candidate_email}")
                         processed_count += 1
                         
@@ -985,8 +1022,11 @@ class ZohoMailMonitor:
 
     def search_questionnaire_reply_emails(self, mail):
         """
-        Search for candidate questionnaire reply emails (unread; subject contains 'questionnaire').
-        Matches "Re: Pre-Interview Questionnaire - Title", "Re: Questionnaire", etc.
+        Search for candidate questionnaire reply emails (unread).
+        Matches subject containing:
+          - "questionnaire" (e.g. "Re: Questionnaire - X"),
+          - "pre-interview questions" (e.g. "Re: [bit68 - Pre-Interview Questions - Backend lead 9]"),
+          - "[bit68" (any reply to our bit68-formatted questionnaire email).
         """
         try:
             status, messages = mail.uid('SEARCH', None, 'UNSEEN')
@@ -995,7 +1035,6 @@ class ZohoMailMonitor:
             uids = messages[0].split()
             if not uids:
                 return []
-            key = "questionnaire"
             matched = []
             for uid in uids:
                 uid_str = uid.decode('utf-8') if isinstance(uid, bytes) else str(uid)
@@ -1015,7 +1054,8 @@ class ZohoMailMonitor:
                         continue
                     if isinstance(raw, bytes):
                         raw = raw.decode('utf-8', errors='ignore')
-                    if key in raw.lower():
+                    subj_lower = raw.lower()
+                    if "questionnaire" in subj_lower or "pre-interview questions" in subj_lower or "[bit68" in subj_lower:
                         matched.append(uid_str)
                 except Exception:
                     continue
@@ -1029,6 +1069,7 @@ class ZohoMailMonitor:
         """
         Process candidate questionnaire reply emails and save to database.
         Matches replies to "Pre-Interview Questionnaire - X" and "Re: Questionnaire" etc.
+        Tracks processed UIDs so the same reply is never applied more than once (avoids repeated score updates).
         """
         try:
             mail = self.connect_to_mailbox()
@@ -1036,11 +1077,17 @@ class ZohoMailMonitor:
                 logger.warning("Questionnaire replies: could not connect to mailbox")
                 return 0
             try:
+                # Reload so we see UIDs already processed by another run
+                self.processed_questionnaire_uids = self._load_processed_uids_from_file(
+                    getattr(self, '_processed_questionnaire_uids_file', None)
+                )
                 reply_uids = self.search_questionnaire_reply_emails(mail)
                 if not reply_uids:
                     return 0
                 processed_count = 0
                 for uid_str in reply_uids:
+                    if uid_str in self.processed_questionnaire_uids:
+                        continue
                     try:
                         status, msg_data = mail.uid('FETCH', uid_str, '(RFC822)')
                         if status != 'OK' or not msg_data or not msg_data[0]:
@@ -1058,18 +1105,51 @@ class ZohoMailMonitor:
                             logger.warning(f"Could not extract candidate email from: {from_email}")
                             continue
                         from candidates.models import CandidateVacancyProfile
-                        profile = CandidateVacancyProfile.objects.filter(
+
+                        # Match by vacancy from subject (outgoing: [bit68 - Pre-Interview Questions - X]; reply: Re: [bit68 - ...] or Re : [...])
+                        _subj = (subject or "").strip()
+                        _subj = re.sub(r'^Re\s*:\s*', '', _subj, flags=re.IGNORECASE).strip()
+                        if _subj.startswith("[bit68 - ") and _subj.endswith("]"):
+                            _subj = _subj[9:-1].strip()
+                        vacancy_title = None
+                        m = re.search(r'Pre-Interview\s+Questions\s*-\s*(.+)', _subj, re.IGNORECASE)
+                        if m:
+                            vacancy_title = m.group(1).strip().rstrip("]").strip()
+                        if not vacancy_title:
+                            m = re.search(r'Questionnaire\s*-\s*(.+)', _subj, re.IGNORECASE)
+                            if m:
+                                vacancy_title = m.group(1).strip().rstrip("]").strip()
+                        if not vacancy_title:
+                            m = re.search(r'Pre-Interview\s+Questionnaire\s*-\s*(.+)', _subj, re.IGNORECASE)
+                            if m:
+                                vacancy_title = m.group(1).strip().rstrip("]").strip()
+
+                        base_qs = CandidateVacancyProfile.objects.filter(
                             candidate__email__iexact=candidate_email
-                        ).first()
-                        if not profile:
+                        ).select_related('vacancy').order_by('-created_at')
+                        if not base_qs.exists():
                             logger.warning(f"No CandidateVacancyProfile for {candidate_email} — ensure candidate applied and has a profile for the vacancy")
                             continue
+
+                        if vacancy_title:
+                            profile = base_qs.filter(vacancy__title__iexact=vacancy_title).first()
+                            if not profile:
+                                logger.warning(f"No profile for vacancy '{vacancy_title}' and {candidate_email} — skipping reply (wrong vacancy)")
+                                continue
+                        else:
+                            profile = base_qs.first()
+                            logger.info(f"Could not extract vacancy from subject, using most recent profile for {candidate_email}")
+
                         profile.questionnaire_response = body
                         profile.questionnaire_response_date = timezone.now()
                         profile.save()
+                        from candidates.signals import rescore_profile_after_questionnaire
+                        rescore_profile_after_questionnaire(profile)
                         self.mark_email_as_read(mail, uid_str)
+                        self.processed_questionnaire_uids.add(uid_str)
+                        self._save_processed_uid_to_file(uid_str, getattr(self, '_processed_questionnaire_uids_file', None))
                         processed_count += 1
-                        logger.info(f"Saved questionnaire response for {candidate_email}")
+                        logger.info(f"Saved questionnaire response for {candidate_email} (UID {uid_str}, will not reprocess)")
                     except Exception as e:
                         logger.error(f"Error processing questionnaire reply UID {uid_str}: {e}")
                 return processed_count

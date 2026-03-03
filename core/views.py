@@ -6,12 +6,15 @@ from rest_framework.permissions import IsAuthenticated
 from .models import User
 from .serializers import UserSerializer
 from vacancies.models import Vacancy, Shortlist
-from candidates.models import Candidate, Application, CandidateVacancyProfile
+from candidates.models import Candidate, Application, CandidateVacancyProfile, BlueCollarLead
 from interviews.models import Interview
+from interviews.services import InterviewSchedulingService
 from django.views.generic import TemplateView, ListView, CreateView, UpdateView, View, DetailView
 from django.urls import reverse_lazy
 from django.shortcuts import redirect
 from django.contrib import messages
+from django.contrib.admin.views.decorators import staff_member_required
+from django.utils.decorators import method_decorator
 from django.db.models import Count, Q
 from .forms import VacancyForm, InterviewEditForm, DailySchedulingScheduleForm
 
@@ -53,7 +56,9 @@ class RecruitmentDashboardView(TemplateView):
         
         # Recent Activity
         context['recent_applications'] = Application.objects.select_related('vacancy', 'cv__candidate').order_by('-created_at')[:5]
-        context['recent_interviews'] = Interview.objects.select_related('vacancy', 'candidate', 'manager').order_by('-scheduled_at')[:5]
+        context['recent_interviews'] = Interview.objects.filter(
+            status='scheduled', scheduled_at__isnull=False
+        ).select_related('vacancy', 'candidate', 'manager').order_by('-scheduled_at')[:5]
         
         # Vacancy Overview
         context['vacancies'] = Vacancy.objects.all().annotate(
@@ -66,6 +71,10 @@ class RecruitmentDashboardView(TemplateView):
         context['recent_candidate_profiles'] = CandidateVacancyProfile.objects.select_related(
             'candidate', 'vacancy'
         ).order_by('-created_at')[:5]
+
+        # Blue-collar leads captured from Facebook posts (name + mobile only)
+        context['blue_collar_leads_total'] = BlueCollarLead.objects.count()
+        context['recent_blue_collar_leads'] = BlueCollarLead.objects.select_related('vacancy').order_by('-created_at')[:5]
 
         # Daily interview scheduling periodic task (for dashboard card + link to admin)
         context['daily_scheduling_task'] = None
@@ -106,6 +115,25 @@ class RecruitmentDashboardView(TemplateView):
         else:
             initial = {'hour': 0, 'minute': 56}
         context['daily_scheduling_form'] = DailySchedulingScheduleForm(initial=initial)
+
+        # Pending Interview Approvals: pending_approval (no slot yet) or scheduled but not yet notified
+        pending_qs = Interview.objects.filter(
+            Q(status='pending_approval') |
+            (Q(status='scheduled') & (Q(manager_notified=False) | Q(candidate_notified=False)))
+        ).select_related('vacancy', 'candidate', 'manager').order_by('created_at')[:20]
+        context['pending_interviews'] = pending_qs
+
+        # Shortlists: per-vacancy top 5 (score = CV + questionnaire when available)
+        vacancies_with_shortlist = Vacancy.objects.filter(
+            shortlists__isnull=False
+        ).distinct().prefetch_related('shortlists__candidate', 'shortlists__application').order_by('-created_at')[:10]
+        context['vacancies_with_shortlist'] = vacancies_with_shortlist
+
+        # Questionnaire stats: profiles with reply vs total (pending = total - replied)
+        context['questionnaire_replied_count'] = CandidateVacancyProfile.objects.exclude(
+            questionnaire_response=''
+        ).exclude(questionnaire_response__isnull=True).count()
+        context['total_candidate_profiles_for_q'] = context['total_candidate_profiles']
 
         return context
 
@@ -153,6 +181,7 @@ class UpdateDailySchedulingScheduleView(View):
                 )
 
             task.crontab = schedule
+            task.enabled = True
             task.save()
             messages.success(
                 request,
@@ -160,6 +189,100 @@ class UpdateDailySchedulingScheduleView(View):
             )
         except Exception as e:
             messages.error(request, f'Could not update schedule: {e}')
+        return redirect('recruiter_dashboard')
+
+
+@method_decorator(staff_member_required, name='dispatch')
+class RunDailySchedulingManuallyView(View):
+    """
+    Run daily interview scheduling in the current process (same as test_celery --run-daily-task --direct).
+    Only adds shortlisted candidates to Pending Interview Approvals (no slot, no emails).
+    Use the dashboard to select candidates and click "Send interview emails for selected" to schedule and send.
+    """
+    def post(self, request):
+        try:
+            from comms.daily_automation_service import DailyAutomationService
+            svc = DailyAutomationService()
+            result = svc.process_daily_interview_scheduling()
+            if result.get('success'):
+                processed = result.get('processed_vacancies', 0)
+                summary = result.get('summary', {})
+                vacancies_checked = summary.get('vacancies_checked', 0)
+                messages.success(
+                    request,
+                    f'Daily scheduling completed: {processed} vacancy(ies) processed. '
+                    f'New interviews (if any) appear in Pending Interview Approvals below.'
+                )
+            else:
+                messages.error(request, result.get('error', 'Scheduling failed.'))
+        except Exception as e:
+            messages.error(request, f'Error running daily scheduling: {str(e)}')
+        return redirect('recruiter_dashboard')
+
+
+class SendInterviewNotificationsDashboardView(View):
+    """
+    For selected Pending Interview Approvals: schedule the interview (assign slot from manager calendar)
+    and send interview emails to manager and candidate.
+    """
+    def post(self, request):
+        interview_ids = request.POST.getlist('interview_ids')
+        if not interview_ids:
+            messages.warning(request, 'No candidates selected. Select from Pending Interview Approvals and click "Send interview emails for selected".')
+            return redirect('recruiter_dashboard')
+
+        interviews = list(
+            Interview.objects.filter(id__in=interview_ids).select_related('vacancy', 'candidate', 'manager')
+        )
+        if not interviews:
+            messages.warning(request, 'Selected items are no longer available.')
+            return redirect('recruiter_dashboard')
+
+        # First: assign a calendar slot to any that are still pending_approval (schedule the interview)
+        from comms.daily_automation_service import DailyAutomationService
+        daily_svc = DailyAutomationService()
+        used_slots_by_manager = {}
+        for interview in interviews:
+            if interview.status == 'pending_approval':
+                if not daily_svc.schedule_pending_interview(interview, used_slots_by_manager):
+                    messages.warning(
+                        request,
+                        f'No calendar slot for {interview.candidate.full_name} ({interview.vacancy.title}). Check manager calendar.'
+                    )
+                interview.refresh_from_db()
+
+        # Send emails only for interviews that have a slot (status scheduled)
+        to_notify = [i for i in interviews if i.status == 'scheduled' and i.scheduled_at]
+        if not to_notify:
+            messages.warning(request, 'No interviews could be scheduled (no slots) or none selected. Ensure calendar has free slots.')
+            return redirect('recruiter_dashboard')
+
+        svc = InterviewSchedulingService()
+        try:
+            result = svc.send_interview_notifications(to_notify)
+            if result.get('success'):
+                sent = result.get('sent_count', 0)
+                messages.success(request, f'Scheduled and sent interview emails for {sent} candidate(s).')
+            else:
+                messages.error(request, f"Failed to send notifications: {result.get('error', 'Unknown error')}")
+        except Exception as e:
+            messages.error(request, f'Error sending notifications: {e}')
+
+        return redirect('recruiter_dashboard')
+
+
+class DeleteCandidateDashboardView(View):
+    """Delete a candidate from the dashboard. Removes candidate and related CVs, applications, shortlists, profiles, interviews."""
+    def post(self, request, pk):
+        try:
+            candidate = Candidate.objects.get(pk=pk)
+            name = candidate.full_name
+            candidate.delete()
+            messages.success(request, f'Candidate "{name}" has been deleted.')
+        except Candidate.DoesNotExist:
+            messages.error(request, 'Candidate not found.')
+        except Exception as e:
+            messages.error(request, f'Could not delete candidate: {e}')
         return redirect('recruiter_dashboard')
 
 

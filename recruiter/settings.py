@@ -33,7 +33,6 @@ INSTALLED_APPS = [
 
     # Third-party
     'rest_framework',
-    'django_celery_beat',
 
     # Local apps
     'core',
@@ -43,6 +42,13 @@ INSTALLED_APPS = [
     'comms',
     'ai',
 ]
+
+# Add Celery apps only if celery is installed (so runserver works without it)
+try:
+    import celery  # noqa: F401
+    INSTALLED_APPS.append('django_celery_beat')
+except ImportError:
+    pass
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -75,14 +81,29 @@ WSGI_APPLICATION = 'recruiter.wsgi.application'
 
 
 # Database
+_db_host = config('POSTGRES_HOST', default='localhost', cast=str)
+# When running locally (not in Docker), "db" is not resolvable; use localhost.
+if _db_host == 'db' and not os.path.exists('/.dockerenv'):
+    _db_host = 'localhost'
+
+_db_user = config('POSTGRES_USER', default='ai_user', cast=str)
+_db_password = config('POSTGRES_PASSWORD', default='', cast=str)
+# On local PostgreSQL (e.g. Mac), the role "ai_user" often doesn't exist; use current OS user.
+if _db_host == 'localhost' and _db_user == 'ai_user':
+    try:
+        import getpass
+        _db_user = getpass.getuser()
+    except Exception:
+        pass
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': config('POSTGRES_DB', cast=str),
-        'USER': config('POSTGRES_USER', cast=str),
-        'PASSWORD': config('POSTGRES_PASSWORD', cast=str),
-        'HOST': config('POSTGRES_HOST', cast=str),  # matches docker-compose service name
-        'PORT': config('POSTGRES_PORT', cast=str),
+        'NAME': config('POSTGRES_DB', default='ai_agent', cast=str),
+        'USER': _db_user,
+        'PASSWORD': _db_password,
+        'HOST': _db_host,
+        'PORT': config('POSTGRES_PORT', default='5432', cast=str),
     }
 }
 
@@ -151,6 +172,8 @@ DEFAULT_MANAGER_EMAIL = os.environ.get('DEFAULT_MANAGER_EMAIL') or config('DEFAU
 AI_RECRUITER_EMAIL = os.environ.get('AI_RECRUITER_EMAIL') or config('AI_RECRUITER_EMAIL', default='')
 APPLICATION_EMAIL = os.environ.get('APPLICATION_EMAIL') or config('APPLICATION_EMAIL', default='')
 DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', config('DEFAULT_FROM_EMAIL', default=None)) or EMAIL_HOST_USER
+# Approval email subject; use {title} for vacancy title. Minimal default to avoid SMTP policy blocks.
+APPROVAL_EMAIL_SUBJECT = os.environ.get('APPROVAL_EMAIL_SUBJECT', config('APPROVAL_EMAIL_SUBJECT', default='{title}'))
 
 ##you'll have working endpoints:
 #http://localhost:8040/api/users/
@@ -158,42 +181,45 @@ DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', config('DEFAULT_FROM_E
 #http://localhost:8040/api/candidates/
 # OAuth endpoints removed (switching to CalDAV-only read path)
 
-# Celery Configuration
-CELERY_BROKER_URL = os.environ.get('REDIS_URL', 'redis://redis:6379/0')
-CELERY_RESULT_BACKEND = os.environ.get('REDIS_URL', 'redis://redis:6379/0')
-CELERY_ACCEPT_CONTENT = ['json']
-CELERY_TASK_SERIALIZER = 'json'
-CELERY_RESULT_SERIALIZER = 'json'
-CELERY_TIMEZONE = os.environ.get('CELERY_TIMEZONE', 'Africa/Cairo')  # Egypt timezone (UTC+3)
-CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
+# Celery Configuration (only when celery is installed)
+try:
+    from celery.schedules import crontab, schedule
+    from datetime import timedelta
 
-# Celery Beat Schedule
-from celery.schedules import crontab, schedule
-from datetime import timedelta
+    CELERY_BROKER_URL = os.environ.get('REDIS_URL', 'redis://redis:6379/0')
+    CELERY_RESULT_BACKEND = os.environ.get('REDIS_URL', 'redis://redis:6379/0')
+    CELERY_ACCEPT_CONTENT = ['json']
+    CELERY_TASK_SERIALIZER = 'json'
+    CELERY_RESULT_SERIALIZER = 'json'
+    CELERY_TIMEZONE = os.environ.get('CELERY_TIMEZONE', 'Africa/Cairo')  # Egypt timezone (UTC+3)
+    CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
 
-CELERY_BEAT_SCHEDULE = {
-    "daily_interview_scheduling": {
-        "task": "comms.tasks.daily_interview_scheduling_task",
-        "schedule": crontab(hour=0, minute=56),  # 12:56 AM daily (Africa/Cairo per CELERY_TIMEZONE)
-    },
-    "check_feedback_requests": {
-        "task": "interviews.tasks.check_and_send_feedback_requests",
-        "schedule": crontab(minute='*'),  # Every minute
-    },
-    "check_linkedin_inbox_every_10_seconds": {
-        "task": "comms.tasks.check_linkedin_inbox",
-        "schedule": schedule(run_every=10),  # Every 10 seconds
-    },
-    "process_questionnaire_reply_emails": {
-        "task": "interviews.tasks.process_questionnaire_reply_emails",
-        "schedule": crontab(minute='*'),  # Every minute
-    },
-    "process_manager_feedback_emails": {
-        "task": "interviews.tasks.process_manager_feedback_emails",
-        "schedule": timedelta(seconds=5),  # Every 5 seconds
-    },
-    "check_vacancy_emails": {
-        "task": "comms.tasks.check_vacancy_emails",
-        "schedule": timedelta(seconds=5),  # Every 5 seconds
-    },
-}
+    CELERY_BEAT_SCHEDULE = {
+        "daily_interview_scheduling": {
+            "task": "comms.tasks.daily_interview_scheduling_task",
+            "schedule": crontab(hour=17, minute=35),  # 5:35 PM daily (Africa/Cairo per CELERY_TIMEZONE)
+        },
+        "check_feedback_requests": {
+            "task": "interviews.tasks.check_and_send_feedback_requests",
+            "schedule": crontab(minute='*'),  # Every minute
+        },
+        "check_linkedin_inbox_every_10_seconds": {
+            "task": "comms.tasks.check_linkedin_inbox",
+            "schedule": schedule(run_every=10),  # Every 10 seconds
+        },
+        "process_questionnaire_reply_emails": {
+            "task": "interviews.tasks.process_questionnaire_reply_emails",
+            "schedule": crontab(minute='*'),  # Every minute
+        },
+        "process_manager_feedback_emails": {
+            "task": "interviews.tasks.process_manager_feedback_emails",
+            "schedule": timedelta(seconds=5),  # Every 5 seconds
+        },
+        "check_vacancy_emails": {
+            "task": "comms.tasks.check_vacancy_emails",
+            "schedule": timedelta(seconds=5),  # Every 5 seconds
+        },
+    }
+except ImportError:
+    CELERY_BROKER_URL = None
+    CELERY_BEAT_SCHEDULE = {}

@@ -13,6 +13,7 @@ from interviews.services import InterviewSchedulingService
 from interviews.zoho_api_service import CalendarDiscoveryService
 from vacancies.models import Vacancy
 from core.models import User
+from core.email_utils import email_subject
 
 logger = logging.getLogger(__name__)
 
@@ -117,7 +118,7 @@ class AutomatedInterviewScheduler:
     def _send_calendar_setup_confirmation(self, manager: User, calendar_result: Dict[str, Any]):
         """Send confirmation email to manager about calendar setup"""
         try:
-            subject = "📅 Calendar Integration Confirmed - AI Recruiter"
+            subject = email_subject("Calendar Integration Confirmed - AI Recruiter")
             
             recruiter_email = getattr(settings, 'AI_RECRUITER_EMAIL', settings.DEFAULT_FROM_EMAIL)
             message = f"""
@@ -260,7 +261,7 @@ Fahmy
     def _send_interview_summary_to_manager(self, vacancy: Vacancy, interviews: List):
         """Send interview summary to manager"""
         try:
-            subject = f"📋 Interview Schedule Summary - {vacancy.title}"
+            subject = email_subject(f"Interview Schedule Summary - {vacancy.title}")
             
             interview_details = []
             for interview in interviews:
@@ -642,7 +643,7 @@ Best regards,
             from interviews.models import Interview
             
             # Send notification to manager
-            manager_subject = f"📅 Interviews Scheduled - {vacancy.title}"
+            manager_subject = email_subject(f"Interviews Scheduled - {vacancy.title}")
             manager_message = f"""
 Dear {vacancy.manager.get_full_name() or vacancy.manager.username},
 
@@ -678,7 +679,7 @@ Fahmy
             
             # Send notifications to candidates
             for interview in interviews:
-                candidate_subject = f"📅 Interview Scheduled - {vacancy.title}"
+                candidate_subject = email_subject(f"Interview Scheduled - {vacancy.title}")
                 candidate_message = f"""
 Dear {interview.candidate.full_name},
 
