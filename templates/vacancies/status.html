@@ -70,6 +70,31 @@
         display: flex;
         gap: 0.5rem;
     }
+
+    .msg-item {
+        padding: 0.75rem 1rem;
+        border-radius: 8px;
+        font-size: 0.875rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .msg-error {
+        background: #fef2f2;
+        color: #b91c1c;
+        border: 1px solid #fecaca;
+    }
+
+    .msg-warning {
+        background: #fef3c7;
+        color: #92400e;
+        border: 1px solid #fde68a;
+    }
+
+    .msg-success {
+        background: #ecfdf5;
+        color: #166534;
+        border: 1px solid #a7f3d0;
+    }
 </style>
 {% endblock %}
 
@@ -77,10 +102,8 @@
 {% if messages %}
 <ul class="messages" style="list-style: none; margin-bottom: 1rem;">
     {% for message in messages %}
-    <li style="padding: 0.75rem 1rem; border-radius: 8px; font-size: 0.875rem; margin-bottom: 0.5rem;
-        {% if message.tags == 'error' %}background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca;
-        {% elif message.tags == 'warning' %}background: #fef3c7; color: #92400e; border: 1px solid #fde68a;
-        {% else %}background: #ecfdf5; color: #166534; border: 1px solid #a7f3d0;{% endif %}">
+    <li
+        class="msg-item {% if message.tags == 'error' %}msg-error{% elif message.tags == 'warning' %}msg-warning{% else %}msg-success{% endif %}">
         {{ message }}
     </li>
     {% endfor %}

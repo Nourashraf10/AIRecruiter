@@ -76,23 +76,25 @@ class VacancyViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['post'])
     def mark_linkedin_posted(self, request, pk=None):
-        """Mark vacancy as posted on LinkedIn and start 3-day collection period"""
+        """Mark vacancy as posted on LinkedIn and transition to collecting_applications"""
         vacancy = self.get_object()
-        if vacancy.status != 'collecting_applications':
-            return Response({"detail": "Vacancy must be collecting applications first"}, status=status.HTTP_400_BAD_REQUEST)
+        if vacancy.status not in ['approved', 'collecting_applications']:
+            return Response({"detail": "Vacancy must be approved or already collecting applications"}, status=status.HTTP_400_BAD_REQUEST)
         
         linkedin_url = request.data.get('linkedin_url', '')
         if not linkedin_url:
             return Response({"detail": "linkedin_url is required"}, status=status.HTTP_400_BAD_REQUEST)
         
-        # Update vacancy with LinkedIn details and set collection period
+        # Update vacancy with LinkedIn details, transition status, and set collection period
         vacancy.linkedin_url = linkedin_url
         vacancy.linkedin_posted_at = timezone.now()
         vacancy.collection_ends_at = timezone.now() + timedelta(days=3)
-        vacancy.save(update_fields=['linkedin_url', 'linkedin_posted_at', 'collection_ends_at'])
+        vacancy.status = 'collecting_applications'
+        vacancy.save(update_fields=['linkedin_url', 'linkedin_posted_at', 'collection_ends_at', 'status'])
         
         return Response({
-            "message": "Vacancy marked as posted on LinkedIn",
+            "message": "Vacancy marked as posted on LinkedIn and is now collecting applications",
+            "status": vacancy.status,
             "collection_ends_at": vacancy.collection_ends_at,
             "linkedin_url": vacancy.linkedin_url
         })

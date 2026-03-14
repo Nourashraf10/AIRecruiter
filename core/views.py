@@ -325,6 +325,7 @@ class ApproveVacancyView(View):
     def post(self, request, pk):
         try:
             vacancy = Vacancy.objects.get(pk=pk)
+            # Set to 'approved' temporarily so the LinkedIn poster can validate status
             vacancy.status = 'approved'
             vacancy.save()
             
@@ -339,26 +340,46 @@ class ApproveVacancyView(View):
                     linkedin_result = poster.execute()
                     
                     if linkedin_result and linkedin_result.get('success'):
+                        # poster.execute() already saved status = 'collecting_applications'
                         messages.success(
-                            request, 
-                            f'Vacancy "{vacancy.title}" approved and posted to LinkedIn! URL: {linkedin_result.get("url", "N/A")}'
+                            request,
+                            f'Vacancy "{vacancy.title}" approved and posted to LinkedIn! '
+                            f'Now collecting applications. URL: {linkedin_result.get("url", "N/A")}'
                         )
                     else:
                         error_msg = linkedin_result.get('error', 'Unknown error') if linkedin_result else 'No result returned'
+                        # LinkedIn failed — still move to collecting_applications
+                        vacancy.refresh_from_db()
+                        if vacancy.status == 'approved':
+                            vacancy.status = 'collecting_applications'
+                            vacancy.save(update_fields=['status'])
                         messages.warning(
-                            request, 
-                            f'Vacancy "{vacancy.title}" approved, but LinkedIn posting failed: {error_msg}'
+                            request,
+                            f'Vacancy "{vacancy.title}" approved and set to collecting applications, '
+                            f'but LinkedIn posting failed: {error_msg}'
                         )
                 except Exception as e:
+                    # LinkedIn error — still move to collecting_applications
+                    vacancy.refresh_from_db()
+                    if vacancy.status == 'approved':
+                        vacancy.status = 'collecting_applications'
+                        vacancy.save(update_fields=['status'])
                     messages.warning(
-                        request, 
-                        f'Vacancy "{vacancy.title}" approved, but LinkedIn posting error: {str(e)}'
+                        request,
+                        f'Vacancy "{vacancy.title}" approved and set to collecting applications, '
+                        f'but LinkedIn posting error: {str(e)}'
                     )
                     import traceback
                     traceback.print_exc()
             else:
-                messages.success(request, f'Vacancy "{vacancy.title}" approved. (LinkedIn posting is disabled)')
-            
+                # LinkedIn disabled — go straight to collecting applications
+                vacancy.status = 'collecting_applications'
+                vacancy.save(update_fields=['status'])
+                messages.success(
+                    request,
+                    f'Vacancy "{vacancy.title}" approved and is now collecting applications.'
+                )
+
         except Vacancy.DoesNotExist:
             messages.error(request, 'Vacancy not found.')
         except Exception as e:

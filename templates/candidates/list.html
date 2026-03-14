@@ -3,6 +3,22 @@
 {% block title %}Candidates{% endblock %}
 
 {% block content %}
+<style>
+    .score-high {
+        font-weight: 600;
+        color: var(--success-color);
+    }
+
+    .score-medium {
+        font-weight: 600;
+        color: var(--warning-color);
+    }
+
+    .score-low {
+        font-weight: 600;
+        color: var(--text-secondary);
+    }
+</style>
 <div class="page-header">
     <div>
         <h1>Candidates</h1>
@@ -32,7 +48,7 @@
                 <td>
                     {% if candidate.ai_score_out_of_10 %}
                     <span
-                        style="font-weight: 600; color: {% if candidate.ai_score_out_of_10 >= 7 %}var(--success-color){% elif candidate.ai_score_out_of_10 >= 4 %}var(--warning-color){% else %}var(--text-secondary){% endif %}">
+                        class="{% if candidate.ai_score_out_of_10 >= 7 %}score-high{% elif candidate.ai_score_out_of_10 >= 4 %}score-medium{% else %}score-low{% endif %}">
                         {{ candidate.ai_score_out_of_10 }}/10
                     </span>
                     {% else %}

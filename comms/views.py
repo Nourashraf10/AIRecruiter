@@ -691,6 +691,7 @@ class ApprovalLandingView(View):
                         
                         if linkedin_result['success']:
                             print(f"✅ LinkedIn posting successful: {linkedin_result['url']}")
+                            # poster.execute() already saved status = 'collecting_applications'
                         else:
                             linkedin_error = linkedin_result.get('error', 'Unknown error')
                             print(f"❌ LinkedIn posting failed: {linkedin_error}")
@@ -699,6 +700,12 @@ class ApprovalLandingView(View):
                         print(f"❌ LinkedIn automation error: {str(e)}")
                         import traceback
                         traceback.print_exc()
+
+                # Always transition to collecting_applications after approval
+                vacancy.refresh_from_db()
+                if vacancy.status == 'approved':
+                    vacancy.status = 'collecting_applications'
+                    vacancy.save(update_fields=['status'])
                 
                 # Send email to HR about the result
                 if linkedin_result and linkedin_result['success']:

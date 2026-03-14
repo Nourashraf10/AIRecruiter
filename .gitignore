@@ -10,3 +10,8 @@ logs/*.err
 *.plist
 logs/*.log
 logs/*.out
+
+# Screenshots
+screenshots/
+screenshots_from_docker/
+screenshots_latest/
