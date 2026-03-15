@@ -35,6 +35,10 @@ class VacancyAdmin(admin.ModelAdmin):
             'fields': ('linkedin_url', 'linkedin_posted_at', 'collection_ends_at'),
             'classes': ('collapse',)
         }),
+        ('Facebook posting', {
+            'fields': ('facebook_posting',),
+            'classes': ('collapse',)
+        }),
         ('Questionnaire', {
             'fields': ('questionnaire_template',),
             'classes': ('collapse',)
@@ -54,6 +58,7 @@ class VacancyAdmin(admin.ModelAdmin):
         "send_caldav_offer_to_first_shortlisted",
         "schedule_first_shortlisted_from_caldav",
         "send_questionnaire_to_next_shortlisted",
+        "post_to_facebook",
     ]
 
     def _get_first_shortlisted_candidate(self, vacancy: Vacancy):
@@ -175,7 +180,66 @@ class VacancyAdmin(admin.ModelAdmin):
                 messages.error(request, f"Failed to send questionnaire for '{vacancy.title}': {str(e)}")
         if sent == 0 and queryset.count() > 0:
             messages.warning(request, "No questionnaires sent.")
-    
+
+    @admin.action(description="Post to Facebook (manual)")
+    def post_to_facebook(self, request, queryset):
+        from comms.tasks import post_vacancy_to_facebook_sync
+        success = 0
+        for vacancy in queryset:
+            result = post_vacancy_to_facebook_sync(vacancy.id)
+            if result.get("success"):
+                success += 1
+                messages.success(request, f"Posted '{vacancy.title}' to Facebook.")
+            else:
+                messages.error(request, f"Failed to post '{vacancy.title}': {result.get('error', 'Unknown error')}")
+        if success == 0 and queryset.count() > 0:
+            messages.warning(request, "No vacancies posted. Check errors above.")
+
+    def facebook_posting(self, obj):
+        """Button to manually post this vacancy to Facebook (same as automatic post on manager approval)."""
+        posted = obj.linkedin_posted_at
+        html = "<div style='margin: 10px 0;'>"
+        if posted:
+            html += f"<p style='color: #28a745; margin-bottom: 10px;'>✓ Posted on {posted.strftime('%Y-%m-%d %H:%M')}</p>"
+        html += "<button type='button' onclick='postToFacebook({})' style='background: #1877f2; color: white; padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer;'>Post to Facebook now</button>"
+        html += "<p style='margin-top: 8px; color: #6c757d; font-size: 12px;'>Uses the same automation as when manager approves. Status will be set to Collecting applications on success.</p>"
+        html += "</div>"
+        html += """
+        <script>
+        function postToFacebook(vacancyId) {
+            if (!confirm('Post this vacancy to Facebook now? This will use Playwright automation and set status to Collecting applications.')) return;
+            var btn = event.target;
+            btn.disabled = true;
+            btn.textContent = 'Posting...';
+            fetch('/admin/vacancies/vacancy/' + vacancyId + '/post-to-facebook/', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                    'Content-Type': 'application/json',
+                },
+            })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (data.success) {
+                    alert(data.message);
+                    location.reload();
+                } else {
+                    alert('Error: ' + (data.error || 'Unknown error'));
+                    btn.disabled = false;
+                    btn.textContent = 'Post to Facebook now';
+                }
+            })
+            .catch(function(err) {
+                alert('Error: ' + err);
+                btn.disabled = false;
+                btn.textContent = 'Post to Facebook now';
+            });
+        }
+        </script>
+        """
+        return mark_safe(html)
+    facebook_posting.short_description = "Facebook posting"
+
     def applications_count(self, obj):
         """Show count of applications for this vacancy"""
         count = obj.get_applied_candidates().count()

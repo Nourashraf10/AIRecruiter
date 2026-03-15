@@ -453,7 +453,93 @@ Focus on:
 Be thorough and objective in your analysis.
 """
         return prompt
-    
+
+    def compute_final_score_with_questionnaire(self, profile) -> Dict[str, Any]:
+        """
+        Recompute AI score (0-10) using both CV analysis and questionnaire response.
+        Used to update CandidateVacancyProfile when a questionnaire reply is received.
+        """
+        vacancy = profile.vacancy
+        cv_score = float(profile.ai_score) if profile.ai_score is not None else None
+        cv_analysis = profile.ai_analysis or ""
+        questionnaire = (profile.questionnaire_response or "").strip()
+        if not questionnaire:
+            return {
+                "overall_score": cv_score or 0,
+                "score_breakdown": profile.ai_score_breakdown or {},
+                "reasoning": "No questionnaire response yet; using CV-only score.",
+            }
+
+        prompt = self._create_combined_score_prompt(profile, cv_score, cv_analysis, questionnaire)
+        if not self.api_key:
+            return self._simulate_combined_score(cv_score, questionnaire)
+
+        try:
+            response = self._call_openai_api(prompt)
+            return self._parse_ai_response(response)
+        except Exception as e:
+            print(f"❌ Combined score (CV + questionnaire) failed: {e}")
+            return {
+                "overall_score": cv_score or 0,
+                "score_breakdown": profile.ai_score_breakdown or {},
+                "reasoning": f"Fallback to CV score after error: {e}",
+            }
+
+    def _create_combined_score_prompt(self, profile, cv_score: Optional[float], cv_analysis: str, questionnaire: str) -> str:
+        """Prompt to produce a final 0-10 score from CV analysis + questionnaire."""
+        v = profile.vacancy
+        return f"""
+You are an expert HR recruiter. We have already scored this candidate's CV for the role. The candidate has now submitted a questionnaire response. Produce a single final score (0-10) that combines the CV fit and the questionnaire quality.
+
+JOB: {v.title} | Department: {v.department} | Keywords: {v.keywords}
+
+INITIAL CV ASSESSMENT:
+- Score (0-10): {cv_score if cv_score is not None else 'N/A'}
+- Analysis: {cv_analysis[:1500] if cv_analysis else 'N/A'}
+
+QUESTIONNAIRE RESPONSE (candidate's answers):
+{questionnaire[:3000]}
+
+Output a JSON object with:
+{{
+    "overall_score": <final score 0-10 combining CV and questionnaire>,
+    "score_breakdown": {{
+        "technical_skills": <0-10>,
+        "experience_relevance": <0-10>,
+        "education_match": <0-10>,
+        "cultural_fit": <0-10>,
+        "questionnaire_fit": <0-10>
+    }},
+    "strengths": ["strength1", "strength2"],
+    "weaknesses": ["weakness1"],
+    "missing_requirements": [],
+    "recommendation": "HIRE" or "MAYBE" or "REJECT",
+    "reasoning": "Brief explanation of how the questionnaire changed or confirmed the score."
+}}
+Respond with valid JSON only.
+"""
+
+    def _simulate_combined_score(self, cv_score: Optional[float], questionnaire: str) -> Dict[str, Any]:
+        """Fallback when no API key: slight boost if questionnaire is substantive."""
+        base = float(cv_score) if cv_score is not None else 5.0
+        boost = 0.5 if len(questionnaire.strip()) > 50 else 0.0
+        final = min(10.0, base + boost)
+        return {
+            "overall_score": final,
+            "score_breakdown": {
+                "technical_skills": base,
+                "experience_relevance": base,
+                "education_match": base,
+                "cultural_fit": base,
+                "questionnaire_fit": min(10, (base + 1)),
+            },
+            "strengths": ["CV and questionnaire considered"],
+            "weaknesses": [],
+            "missing_requirements": [],
+            "recommendation": "MAYBE" if final >= 6 else "REJECT",
+            "reasoning": "Simulated combined score (no API key).",
+        }
+
     def _create_profile_generation_prompt(self, vacancy, cv_text: str, candidate) -> str:
         """Create AI prompt for candidate profile generation"""
         

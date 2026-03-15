@@ -108,19 +108,34 @@ class FacebookPoster(BasePoster):
         ]
         content = "\n".join(line for line in content_lines if line is not None)
 
-        textbox_sel = selectors.get("composer_textbox")
         try:
-            if textbox_sel:
-                locator = page.locator(textbox_sel).first
-            else:
-                locator = page.get_by_role("textbox").first
-
+            # Prefer the main composer textbox with an aria-label containing
+            # "Write something" (typical for group posts). This avoids picking
+            # up the comment box (aria-label "Write a public comment…").
             try:
-                locator.wait_for(state="visible", timeout=10_000)
+                locator = page.locator("div[role='textbox'][aria-label*='Write something']").first
+                locator.wait_for(state="visible", timeout=5_000)
             except PlaywrightTimeout:
-                # Fallback: many FB composers use a contenteditable div.
-                locator = page.locator("div[contenteditable='true']").first
-                locator.wait_for(state="visible", timeout=10_000)
+                # Exclude comment box: use textbox that does NOT have aria-label containing "comment".
+                try:
+                    locator = page.locator(
+                        "div[role='textbox']:not([aria-label*='comment'])"
+                    ).first
+                    locator.wait_for(state="visible", timeout=5_000)
+                except PlaywrightTimeout:
+                    textbox_sel = selectors.get("composer_textbox")
+                    if textbox_sel:
+                        locator = page.locator(textbox_sel).first
+                    else:
+                        locator = page.get_by_role("textbox").first
+                    try:
+                        locator.wait_for(state="visible", timeout=10_000)
+                    except PlaywrightTimeout:
+                        # Last resort: contenteditable but exclude comment box.
+                        locator = page.locator(
+                            "div[contenteditable='true']:not([aria-label*='comment'])"
+                        ).first
+                        locator.wait_for(state="visible", timeout=10_000)
 
             locator.fill("")  # clear if any default
             locator.type(content, delay=10)
@@ -147,6 +162,97 @@ class FacebookPoster(BasePoster):
                 f"{json_path} after inspecting the composer (run with POSTING_HEADLESS=false)."
             )
         page.wait_for_load_state("load", timeout=15_000)
+
+    def _navigate_to_group_post_composer(self, page: Page, group_name: str) -> None:
+        """
+        Navigate: Home → Groups → Your groups → [group by name] → Write something
+        → Create public post, so the group composer is open.
+        """
+        json_path = Path(__file__).resolve().parent / "selectors" / "facebook.json"
+        gsel = _CONFIG.get("group_selectors") or {}
+        page_url = _CONFIG.get("page_url", "https://www.facebook.com/")
+
+        page.goto(page_url, wait_until="domcontentloaded", timeout=30_000)
+        page.wait_for_timeout(2000)
+
+        # Click "Groups" in the left sidebar
+        groups_sel = gsel.get("groups_link")
+        if groups_sel:
+            try:
+                page.locator(groups_sel).first.wait_for(state="visible", timeout=10_000)
+                page.locator(groups_sel).first.click()
+            except PlaywrightTimeout:
+                page.get_by_role("link", name="Groups").first.click()
+        else:
+            page.get_by_role("link", name="Groups").first.click()
+        page.wait_for_timeout(2000)
+
+        # Click "Your groups"
+        your_groups_sel = gsel.get("your_groups_link")
+        if your_groups_sel:
+            try:
+                page.locator(your_groups_sel).first.wait_for(state="visible", timeout=10_000)
+                page.locator(your_groups_sel).first.click()
+            except PlaywrightTimeout:
+                page.get_by_text("Your groups", exact=True).first.click()
+        else:
+            page.get_by_text("Your groups", exact=True).first.click()
+        page.wait_for_timeout(3000)
+
+        # Open the group by name (e.g. "Test Posting")
+        try:
+            page.get_by_role("link", name=group_name).first.click()
+        except PlaywrightTimeout:
+            page.get_by_text(group_name, exact=True).first.click()
+        page.wait_for_timeout(3000)
+
+        # Focus the main group composer textbox (not the comment box).
+        # Prefer a contenteditable div with an aria-label containing "Write something".
+        try:
+            composer = page.locator("div[role='textbox'][aria-label*='Write something']").first
+            composer.wait_for(state="visible", timeout=10_000)
+            composer.click()
+        except PlaywrightTimeout:
+            # Fallback: click by visible text, may still work if DOM differs.
+            page.get_by_text("Write something...", exact=False).first.click()
+        page.wait_for_timeout(2000)
+
+    def post_job_to_groups(self, job: JobPosting, group_names: Optional[List[str]] = None) -> None:
+        """
+        Post the job to each of the given groups (or to groups from config if
+        group_names is None). Uses the same login/session as post_job.
+        Flow: Groups → Your groups → [group] → Write something → Create public post
+        → fill text → Post.
+        """
+        names = group_names if group_names is not None else _CONFIG.get("groups") or []
+        if not names:
+            return
+
+        headless_env = os.getenv("POSTING_HEADLESS")
+        headless = self.headless if headless_env is None else headless_env.lower() != "false"
+
+        with sync_playwright() as p:
+            browser = p.chromium.launch(headless=headless)
+            try:
+                context_kwargs: Dict[str, Any] = {}
+                use_storage = _STORAGE_STATE_PATH.exists()
+                if use_storage:
+                    context_kwargs["storage_state"] = str(_STORAGE_STATE_PATH)
+
+                context = browser.new_context(**context_kwargs)
+                page = context.new_page()
+                page.set_default_navigation_timeout(30_000)
+
+                if not use_storage:
+                    self._login(page)
+
+                for group_name in names:
+                    self._navigate_to_group_post_composer(page, group_name)
+                    self._fill_job_form(page, job)
+                    self._submit_job_form(page)
+                    page.wait_for_timeout(2000)
+            finally:
+                browser.close()
 
     def post_job(self, job: JobPosting) -> None:
         """

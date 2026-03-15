@@ -52,30 +52,48 @@ class Vacancy(models.Model):
         return self.shortlists.all().order_by('rank')
 
     def generate_shortlist(self):
-        """Generate shortlist of top 5 candidates based on AI scores"""
-        from candidates.models import Application
+        """Generate shortlist of top 5 candidates based on profile AI scores (CV + questionnaire when available)."""
+        from candidates.models import Application, CandidateVacancyProfile
         from django.utils import timezone
-        
-        # Get all applications for this vacancy with AI scores
-        applications = Application.objects.filter(
-            vacancy=self,
-            cv__candidate__ai_score_out_of_10__isnull=False
-        ).select_related('cv__candidate').order_by('-cv__candidate__ai_score_out_of_10')[:5]
-        
-        # Clear existing shortlist
+
+        profiles = (
+            CandidateVacancyProfile.objects.filter(vacancy=self)
+            .exclude(ai_score__isnull=True)
+            .select_related('candidate')
+            .order_by('-ai_score')[:5]
+        )
+        if not profiles:
+            applications = Application.objects.filter(
+                vacancy=self,
+                cv__candidate__ai_score_out_of_10__isnull=False
+            ).select_related('cv__candidate').order_by('-cv__candidate__ai_score_out_of_10')[:5]
+            self.shortlists.all().delete()
+            for rank, application in enumerate(applications, 1):
+                Shortlist.objects.create(
+                    vacancy=self,
+                    candidate=application.cv.candidate,
+                    application=application,
+                    rank=rank,
+                    ai_score=application.cv.candidate.ai_score_out_of_10,
+                    generated_at=timezone.now()
+                )
+            return self.shortlists.count()
         self.shortlists.all().delete()
-        
-        # Create new shortlist entries
-        for rank, application in enumerate(applications, 1):
+        for rank, profile in enumerate(profiles, 1):
+            application = Application.objects.filter(
+                vacancy=self,
+                cv__candidate=profile.candidate
+            ).select_related('cv').first()
+            if not application:
+                continue
             Shortlist.objects.create(
                 vacancy=self,
-                candidate=application.cv.candidate,
+                candidate=profile.candidate,
                 application=application,
                 rank=rank,
-                ai_score=application.cv.candidate.ai_score_out_of_10,
+                ai_score=profile.ai_score,
                 generated_at=timezone.now()
             )
-        
         return self.shortlists.count()
 
 

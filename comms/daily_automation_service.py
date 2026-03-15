@@ -1,6 +1,8 @@
 """
 Daily Automation Service for Interview Scheduling
-Runs daily at 11:59 PM to check shortlisted candidates and send interview emails
+Runs daily (or manually) to add shortlisted candidates to Pending Interview Approvals.
+Does not assign slots or send emails; the recruiter selects candidates and clicks
+"Send interview emails for selected" on the dashboard to schedule and send.
 """
 
 import logging
@@ -11,8 +13,9 @@ from django.utils import timezone
 from datetime import datetime, timedelta
 from core.models import User
 from vacancies.models import Vacancy, Shortlist
-from candidates.models import Candidate, Application
+from candidates.models import Candidate, Application, CandidateVacancyProfile
 from comms.models import OutgoingEmail
+from core.email_utils import email_subject  # questionnaire only (IT policy)
 from interviews.models import Interview, InterviewSlot
 from interviews.services import ZohoCalendarService, InterviewSchedulingService
 
@@ -59,55 +62,66 @@ class DailyAutomationService:
             # Process each vacancy
             for vacancy in collecting_vacancies:
                 logger.info(f"📝 Processing vacancy: {vacancy.title} (ID: {vacancy.id})")
-                
+                if not getattr(vacancy, 'manager_id', None) or not vacancy.manager:
+                    logger.warning(f"⚠️ Vacancy {vacancy.title} has no manager assigned — skipping. Assign a manager in Admin > Vacancies.")
+                    continue
+
+                # Ensure shortlist is up to date (top 5 by AI score) before picking candidates
+                try:
+                    from candidates.signals import update_shortlist_for_vacancy
+                    update_shortlist_for_vacancy(vacancy)
+                except Exception as e:
+                    logger.warning(f"⚠️ Could not update shortlist for {vacancy.title}: {e}")
+
+                # Log who is in the shortlist (so we can see if a specific candidate was included)
+                shortlist_entries = Shortlist.objects.filter(vacancy=vacancy).order_by('rank').select_related('candidate')
+                shortlist_names = [e.candidate.full_name for e in shortlist_entries]
+                logger.info(f"📋 Shortlist for {vacancy.title}: {shortlist_names or '(empty)'}")
+
                 # Get all eligible candidates for this vacancy (shortlisted and not already scheduled)
                 eligible_candidates = self._get_eligible_candidates(vacancy)
                 if not eligible_candidates:
-                    logger.warning(f"⚠️ No eligible shortlisted candidates for {vacancy.title} — add a shortlist (Admin > Vacancy > Generate shortlist) and ensure candidates are not already scheduled.")
+                    logger.warning(f"⚠️ No eligible shortlisted candidates for {vacancy.title} — ensure the vacancy has applications with AI scores and candidates are not already scheduled.")
                     continue
 
-                logger.info(f"📋 Found {len(eligible_candidates)} eligible candidate(s) for {vacancy.title}")
-                
-                # Track used slots for this manager to avoid conflicts
-                used_slots = set()
-                vacancy_processed = False
-                
-                # Process each eligible candidate
-                for candidate in eligible_candidates:
-                    # Find a free slot on manager calendar (next 7 days, 60 minutes)
-                    slot = self._find_manager_free_slot(vacancy, used_slots)
-                    if not slot:
-                        logger.warning(f"⚠️ No available calendar slot for manager {vacancy.manager.email} (vacancy {vacancy.title}). Check CalDAV/Calendar integration for this manager.")
-                        break
+                logger.info(f"📋 Eligible (not yet scheduled): {[c.full_name for c in eligible_candidates]}")
 
-                    # Create InterviewSlot and Interview, then notify
-                    scheduling_result = self._create_and_notify(vacancy, candidate, slot)
-                    if scheduling_result.get('success'):
-                        # Mark this slot as used
-                        slot_key = f"{slot['start_time']}_{slot['end_time']}"
-                        used_slots.add(slot_key)
-                        vacancy_processed = True
-                        total_emails_sent += scheduling_result.get('emails_sent', 0)
-                        logger.info(f"✅ Scheduled interview and sent notifications for {vacancy.title} - {candidate.full_name}")
+                # Only add shortlisted candidates to Pending Interview Approvals (no slot, no emails).
+                # Recruiter selects candidates and clicks "Send interview emails for selected" to schedule and send.
+                added_count = 0
+                for candidate in eligible_candidates:
+                    interview, created = Interview.objects.get_or_create(
+                        vacancy=vacancy,
+                        candidate=candidate,
+                        defaults={
+                            'manager': vacancy.manager,
+                            'status': 'pending_approval',
+                            'interview_slot': None,
+                            'scheduled_at': None,
+                            'duration_minutes': 60,
+                        },
+                    )
+                    if created:
+                        added_count += 1
+                        logger.info(f"✅ Added to Pending Interview Approvals: {vacancy.title} — {candidate.full_name}")
                     else:
-                        logger.error(f"❌ Failed scheduling/notifications for {candidate.full_name}: {scheduling_result.get('error')}")
-                
-                if vacancy_processed:
+                        logger.debug(f"Already in Pending/scheduled: {candidate.full_name} for {vacancy.title}")
+
+                if added_count > 0:
                     processed_vacancies += 1
             
-            if total_emails_sent == 0:
-                logger.warning("⚠️ Daily interview scheduling finished with 0 emails sent. Check: vacancies in 'collecting_applications', shortlists exist, manager calendar has slots, and EMAIL_* settings.")
-            logger.info(f"🎉 Daily interview scheduling completed: {processed_vacancies} vacancies processed, {total_emails_sent} emails sent")
+            logger.info("ℹ️ Daily task only adds candidates to Pending Interview Approvals. Use the dashboard to select and send interview emails (which schedules the slot and sends emails).")
+            logger.info(f"🎉 Daily interview scheduling completed: {processed_vacancies} vacancy(ies) with new pending approvals")
             
             return {
                 'success': True,
-                'message': f'Daily interview scheduling completed: {processed_vacancies} vacancies processed, {total_emails_sent} emails sent',
+                'message': f'Daily scheduling completed: {processed_vacancies} vacancy(ies) updated. New entries appear in Pending Interview Approvals.',
                 'processed_vacancies': processed_vacancies,
-                'total_emails_sent': total_emails_sent,
+                'total_emails_sent': 0,
                 'summary': {
                     'vacancies_checked': collecting_vacancies.count(),
                     'vacancies_processed': processed_vacancies,
-                    'total_emails_sent': total_emails_sent,
+                    'total_emails_sent': 0,
                     'timestamp': timezone.now().isoformat()
                 }
             }
@@ -204,8 +218,8 @@ class DailyAutomationService:
                 end_time=slot['end_time'],
                 is_available=False,
             )
-
-            # Create interview
+            
+            # Create interview (notifications will be sent only after manager approval from dashboard)
             interview = Interview.objects.create(
                 vacancy=vacancy,
                 candidate=candidate,
@@ -215,28 +229,77 @@ class DailyAutomationService:
                 duration_minutes=slot.get('duration_minutes', 60),
                 status='scheduled',
             )
-
-            # Send notifications
-            svc = InterviewSchedulingService()
-            notify_result = svc.send_interview_notifications([interview])
-            if notify_result.get('success'):
-                # Send questionnaire via email to the specified candidate mailbox
-                try:
-                    self._send_questionnaire_email(vacancy, candidate)
-                except Exception as e:
-                    logger.warning(f"Questionnaire email send failed for {candidate.email}: {str(e)}")
-                return {'success': True, 'emails_sent': notify_result.get('sent_count', 0)}
-            return {'success': False, 'error': notify_result.get('error', 'Failed to send notifications')}
+            
+            return {
+                'success': True,
+                'emails_sent': 0,
+                'interview_id': interview.id,
+            }
         except Exception as e:
             return {'success': False, 'error': str(e)}
 
+    def schedule_pending_interview(self, interview: Interview, used_slots_by_manager: Optional[Dict[Any, set]] = None) -> bool:
+        """
+        Assign a calendar slot to a pending_approval interview and mark as scheduled.
+        Used when the recruiter clicks "Send interview emails for selected" on the dashboard.
+        used_slots_by_manager: dict keyed by manager id, value = set of slot keys (to avoid double-booking same manager).
+        Returns True if slot was assigned, False if no slot available or already scheduled.
+        """
+        if interview.status != 'pending_approval':
+            return True
+        if used_slots_by_manager is None:
+            used_slots_by_manager = {}
+        used = used_slots_by_manager.setdefault(interview.manager_id, set())
+        slot = self._find_manager_free_slot(interview.vacancy, used)
+        if not slot:
+            return False
+        try:
+            interview_slot = InterviewSlot.objects.create(
+                vacancy=interview.vacancy,
+                manager=interview.manager,
+                start_time=slot['start_time'],
+                end_time=slot['end_time'],
+                is_available=False,
+            )
+            interview.interview_slot = interview_slot
+            interview.scheduled_at = slot['start_time']
+            interview.duration_minutes = slot.get('duration_minutes', 60)
+            interview.status = 'scheduled'
+            interview.save(update_fields=['interview_slot', 'scheduled_at', 'duration_minutes', 'status'])
+            used.add(f"{slot['start_time']}_{slot['end_time']}")
+            return True
+        except Exception as e:
+            logger.warning(f"Could not schedule pending interview {interview.id}: {e}")
+            return False
+
     def _send_questionnaire_email(self, vacancy: Vacancy, candidate: Candidate) -> None:
-        """Send the pre-interview questionnaire via email to the chosen shortlisted candidate."""
+        """Send the pre-interview questionnaire via email to the chosen shortlisted candidate. Skips if already sent for this vacancy."""
+        from django.db import transaction
+        try:
+            with transaction.atomic():
+                profile = CandidateVacancyProfile.objects.select_for_update().filter(
+                    candidate=candidate, vacancy=vacancy
+                ).first()
+                if not profile:
+                    profile, _ = CandidateVacancyProfile.objects.get_or_create(
+                        candidate=candidate,
+                        vacancy=vacancy,
+                        defaults={'application_status': 'shortlisted'},
+                    )
+                if profile.questionnaire_email_sent_at:
+                    logger.info(f"Skipping questionnaire send to {candidate.email} for '{vacancy.title}' — already sent")
+                    return
+                profile.questionnaire_email_sent_at = timezone.now()
+                profile.save(update_fields=['questionnaire_email_sent_at'])
+        except Exception as e:
+            logger.warning(f"Could not lock/set questionnaire flag: {e}")
+            return
         target_email = candidate.email
         questionnaire = vacancy.questionnaire_template or (
             "1) Why this role?\n2) When can you start?\n3) What is your expected salary?"
         )
-        subject = f"Pre-Interview Questionnaire - {vacancy.title}"
+        safe_title = "".join(c if ord(c) < 128 else " " for c in (vacancy.title or "")).strip() or "Position"
+        subject = email_subject(f"Pre-Interview Questions - {safe_title}")
         message = (
             f"Dear {candidate.full_name},\n\n"
             f"You have been shortlisted for the position '{vacancy.title}'.\n"
@@ -314,7 +377,7 @@ Fahmy
     def _send_candidate_notification(self, vacancy: Vacancy, candidate: Candidate) -> Dict[str, Any]:
         """Send notification email to candidate"""
         try:
-            subject = f"Interview Invitation - {vacancy.title}"
+            subject = email_subject(f"Interview Invitation - {vacancy.title}")
             
             message = f"""
 Dear {candidate.full_name},

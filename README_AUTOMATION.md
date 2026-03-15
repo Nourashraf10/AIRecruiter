@@ -15,7 +15,7 @@ The system automatically:
 
 ### **Step 1: Vacancy Creation**
 ```
-User sends "Open Vacancy" email → AI creates vacancy → Sends approval email to manager
+User sends "[Bit68 -Open Vacancy]" email → AI creates vacancy → Sends approval email to manager
 ```
 
 ### **Step 2: Vacancy Approval (Triggers Automation)**

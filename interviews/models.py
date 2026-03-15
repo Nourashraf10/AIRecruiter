@@ -52,6 +52,7 @@ class InterviewSlot(models.Model):
 class Interview(models.Model):
     """Scheduled interviews with candidates"""
     STATUS_CHOICES = [
+        ('pending_approval', 'Pending Approval'),  # In dashboard "Pending Interview Approvals"; slot assigned when sending emails
         ('scheduled', 'Scheduled'),
         ('completed', 'Completed'),
         ('cancelled', 'Cancelled'),
@@ -61,10 +62,10 @@ class Interview(models.Model):
     vacancy = models.ForeignKey('vacancies.Vacancy', on_delete=models.CASCADE, related_name='interviews')
     candidate = models.ForeignKey('candidates.Candidate', on_delete=models.CASCADE, related_name='interviews')
     manager = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='interviews')
-    interview_slot = models.ForeignKey(InterviewSlot, on_delete=models.CASCADE, related_name='interviews')
+    interview_slot = models.ForeignKey(InterviewSlot, on_delete=models.CASCADE, related_name='interviews', null=True, blank=True, help_text='Set when interview is scheduled and emails sent')
     
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='scheduled')
-    scheduled_at = models.DateTimeField()
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending_approval')
+    scheduled_at = models.DateTimeField(null=True, blank=True, help_text='Set when interview is scheduled and emails sent')
     duration_minutes = models.IntegerField(default=60)
     
     # Email notifications
@@ -91,7 +92,9 @@ class Interview(models.Model):
         unique_together = ('vacancy', 'candidate')
     
     def __str__(self):
-        return f"{self.candidate.full_name} - {self.vacancy.title} ({self.scheduled_at.strftime('%Y-%m-%d %H:%M')})"
+        if self.scheduled_at:
+            return f"{self.candidate.full_name} - {self.vacancy.title} ({self.scheduled_at.strftime('%Y-%m-%d %H:%M')})"
+        return f"{self.candidate.full_name} - {self.vacancy.title} (pending)"
     
     def has_manager_feedback(self):
         """Check if manager has provided feedback"""

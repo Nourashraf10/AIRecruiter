@@ -22,7 +22,7 @@ Gathers interview feedback and compiles structured candidate profiles.
 Step 1 — Create a New Vacancy
 Send an email to the AI Recruiter (recruiter@example.com) with the following details:
 Subject:
-Open Vacancy
+[Bit68 -Open Vacancy]
 Body Example:
 Title: Fullstack Developer
 Department: Engineering

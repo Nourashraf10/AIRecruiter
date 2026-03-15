@@ -47,15 +47,15 @@ RUN pip install -r requirements.txt
 # Install Playwright browsers (chromium only)
 RUN playwright install chromium
 
-COPY ./celery/start-celeryworker /start-celeryworker
+COPY ./celery_scripts/start-celeryworker /start-celeryworker
 RUN sed -i 's/\r$//g' /start-celeryworker
 RUN chmod +x /start-celeryworker
 
-COPY ./celery/start-celerybeat /start-celerybeat
+COPY ./celery_scripts/start-celerybeat /start-celerybeat
 RUN sed -i 's/\r$//g' /start-celerybeat
 RUN chmod +x /start-celerybeat
 
-COPY ./celery/start-flower /start-flower
+COPY ./celery_scripts/start-flower /start-flower
 RUN sed -i 's/\r$//g' /start-flower
 RUN chmod +x /start-flower
 

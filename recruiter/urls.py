@@ -25,8 +25,8 @@ from rest_framework_simplejwt.views import (
 )
 
 from core.views import UserViewSet
-from vacancies.views import VacancyViewSet, GenerateShortlistView, ClearShortlistView
-from candidates.views import CandidateViewSet, ApplicationViewSet
+from vacancies.views import VacancyViewSet, GenerateShortlistView, ClearShortlistView, PostToFacebookView
+from candidates.views import CandidateViewSet, ApplicationViewSet, BlueCollarApplyView
 from comms.views import InboundEmailView, ManagerApprovalView, ApplicationCollectionView, EmailApplicationView, ApprovalLandingView, LinkedInApplicationInboundView
 from django.views.generic import TemplateView, RedirectView
 from django.contrib.admin.views.decorators import staff_member_required
@@ -39,6 +39,8 @@ from core.views import (
     VacancyUpdateView, CandidateListView, InterviewListView, InterviewUpdateView,
     UpdateDailySchedulingScheduleView, CandidateProfileListView, CandidateProfileDetailView,
     VacancyStatusView, ApproveVacancyView, RejectVacancyView,
+    UpdateDailySchedulingScheduleView, RunDailySchedulingManuallyView, CandidateProfileListView, CandidateProfileDetailView,
+    SendInterviewNotificationsDashboardView, DeleteCandidateDashboardView,
 )
 
 router = DefaultRouter()
@@ -57,6 +59,9 @@ urlpatterns = [
     path('api/dashboard/', DashboardView.as_view(), name='dashboard'),
     path('dashboard/', RecruitmentDashboardView.as_view(), name='recruiter_dashboard'),
     path('dashboard/update-daily-scheduling/', UpdateDailySchedulingScheduleView.as_view(), name='update_daily_scheduling'),
+    path('dashboard/run-daily-scheduling-now/', RunDailySchedulingManuallyView.as_view(), name='run_daily_scheduling_now'),
+    path('dashboard/send-interview-notifications/', SendInterviewNotificationsDashboardView.as_view(), name='send_interview_notifications_dashboard'),
+    path('dashboard/delete-candidate/<int:pk>/', staff_member_required(DeleteCandidateDashboardView.as_view()), name='dashboard_delete_candidate'),
     path('portal/vacancies/', VacancyListView.as_view(), name='vacancy_list'),
     path('portal/vacancies/create/', VacancyCreateView.as_view(), name='vacancy_create'),
     path('portal/vacancies/<int:pk>/edit/', VacancyUpdateView.as_view(), name='vacancy_update'),
@@ -68,6 +73,8 @@ urlpatterns = [
     path('portal/candidate-profiles/<int:pk>/', CandidateProfileDetailView.as_view(), name='candidate_profile_detail'),
     path('portal/interviews/', InterviewListView.as_view(), name='interview_list'),
     path('portal/interviews/<int:pk>/edit/', InterviewUpdateView.as_view(), name='interview_edit'),
+    # Public blue-collar application form (linked from Facebook posts)
+    path('blue-collar/apply/<int:vacancy_id>/', BlueCollarApplyView.as_view(), name='blue_collar_apply'),
     path('api/inbound/email/', InboundEmailView.as_view(), name='inbound_email'),
     path('api/inbound/linkedin-application/', LinkedInApplicationInboundView.as_view(), name='linkedin_application_inbound'),
     path('api/approve-vacancy/<str:approval_token>/', ManagerApprovalView.as_view(), name='manager_approval'),
@@ -85,6 +92,7 @@ urlpatterns = [
     # Admin shortlist endpoints
     path('admin/vacancies/vacancy/<int:vacancy_id>/generate-shortlist/', GenerateShortlistView.as_view(), name='generate_shortlist'),
     path('admin/vacancies/vacancy/<int:vacancy_id>/clear-shortlist/', ClearShortlistView.as_view(), name='clear_shortlist'),
+    path('admin/vacancies/vacancy/<int:vacancy_id>/post-to-facebook/', PostToFacebookView.as_view(), name='post_vacancy_to_facebook'),
     # Admin interview scheduling endpoints
     path('admin/vacancies/vacancy/<int:vacancy_id>/schedule-interviews/', ScheduleInterviewsView.as_view(), name='schedule_interviews'),
     path('admin/vacancies/vacancy/<int:vacancy_id>/send-notifications/', SendInterviewNotificationsView.as_view(), name='send_notifications'),

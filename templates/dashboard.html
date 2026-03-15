@@ -138,7 +138,16 @@
         <h1>Dashboard</h1>
         <p style="color:var(--text-secondary)">Overview of your hiring pipeline</p>
     </div>
+</div>
 
+<!-- Pipeline summary -->
+<div class="section-card" style="margin-bottom: 1.5rem; padding: 1rem 1.25rem;">
+    <p style="font-size: 0.875rem; color: var(--text-secondary); margin: 0;">
+        <strong>Pipeline:</strong> Apply &rarr; Questionnaire (sent on apply) &rarr; AI score (CV + questionnaire)
+        &rarr; Shortlist (top 5) &rarr;
+        Daily job creates scheduled interviews &rarr; <strong>You approve</strong> which candidates get the interview
+        email &rarr; Interview sent.
+    </p>
 </div>
 
 <!-- Key Metrics -->
@@ -152,6 +161,11 @@
         <div class="metric-title">Total Candidates</div>
         <div class="metric-value">{{ total_candidates }}</div>
         <div class="metric-trend">in database</div>
+    </div>
+    <div class="metric-card">
+        <div class="metric-title">Questionnaire replied</div>
+        <div class="metric-value">{{ questionnaire_replied_count|default:0 }}</div>
+        <div class="metric-trend">of {{ total_candidate_profiles_for_q|default:0 }} profiles</div>
     </div>
     <div class="metric-card">
         <div class="metric-title">Upcoming Interviews</div>
@@ -191,10 +205,8 @@
                         </td>
                         <td>{{ v.department }}</td>
                         <td>
-                            <span class="status-badge 
-                                {% if v.status == 'collecting_applications' %}status-active
-                                {% elif v.status == 'closed' %}status-closed
-                                {% else %}status-awaiting{% endif %}">
+                            <span
+                                class="status-badge {% if v.status == 'collecting_applications' %}status-active{% elif v.status == 'closed' %}status-closed{% else %}status-awaiting{% endif %}">
                                 {{ v.get_status_display }}
                             </span>
                         </td>
@@ -219,11 +231,23 @@
             {% for app in recent_applications %}
             <div class="list-item">
                 <div class="item-main">
-                    <span class="item-title">{{ app.cv.candidate.full_name }}</span>
+                    <span class="item-title">{% if app.cv.candidate %}{{ app.cv.candidate.full_name }}{% else
+                        %}&mdash;{% endif %}</span>
                     <span class="item-sub">{{ app.vacancy.title }}</span>
                 </div>
-                <span style="font-size:0.75rem; color:var(--text-secondary);">Avg Score: {{
-                    app.cv.candidate.ai_score_out_of_10|default:'-' }}</span>
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <span style="font-size:0.75rem; color:var(--text-secondary);">{% if app.cv.candidate %}Avg Score: {{
+                        app.cv.candidate.ai_score_out_of_10|default:'-' }}{% endif %}</span>
+                    {% if app.cv.candidate %}
+                    <form action="{% url 'dashboard_delete_candidate' app.cv.candidate.pk %}" method="post"
+                        style="display:inline;"
+                        onsubmit="return confirm('Delete candidate {{ app.cv.candidate.full_name }}? This cannot be undone.');">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-outline"
+                            style="padding: 0.25rem 0.5rem; font-size: 0.75rem; color: #b91c1c;">Delete</button>
+                    </form>
+                    {% endif %}
+                </div>
             </div>
             {% empty %}
             <div class="list-item"><span class="item-sub">No recent applications.</span></div>
@@ -238,8 +262,8 @@
             <div class="list-item">
                 <div class="item-main">
                     <span class="item-title">{{ interview.candidate.full_name }}</span>
-                    <span class="item-sub">{{ interview.vacancy.title }} – {{ interview.scheduled_at|date:'M d, H:i'
-                        }}</span>
+                    <span class="item-sub">{{ interview.vacancy.title }} &ndash; {{ interview.scheduled_at|date:'M d,
+                        H:i' }}</span>
                 </div>
                 <a href="{% url 'interview_edit' interview.pk %}?next={% url 'recruiter_dashboard' %}"
                     class="btn btn-outline"
@@ -266,10 +290,20 @@
             <div class="list-item">
                 <div class="item-main">
                     <span class="item-title">{{ p.candidate.full_name }}</span>
-                    <span class="item-sub">{{ p.vacancy.title }}{% if p.ai_score %} · {{ p.ai_score }}{% endif %}</span>
+                    <span class="item-sub">{{ p.vacancy.title }}{% if p.ai_score %} &middot; {{ p.ai_score }}{% endif
+                        %}</span>
                 </div>
-                <a href="{% url 'candidate_profile_detail' p.pk %}" class="btn btn-outline"
-                    style="padding: 0.25rem 0.5rem; font-size: 0.75rem; text-decoration: none;">View</a>
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <a href="{% url 'candidate_profile_detail' p.pk %}" class="btn btn-outline"
+                        style="padding: 0.25rem 0.5rem; font-size: 0.75rem; text-decoration: none;">View</a>
+                    <form action="{% url 'dashboard_delete_candidate' p.candidate.pk %}" method="post"
+                        style="display:inline;"
+                        onsubmit="return confirm('Delete candidate {{ p.candidate.full_name }}? This will remove their applications, profiles, and interviews.');">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-outline"
+                            style="padding: 0.25rem 0.5rem; font-size: 0.75rem; color: #b91c1c;">Delete</button>
+                    </form>
+                </div>
             </div>
             {% empty %}
             <div class="list-item"><span class="item-sub">No candidate profiles yet.</span></div>
@@ -283,22 +317,23 @@
                     style="padding: 0.375rem 0.75rem; font-size: 0.8125rem; text-decoration: none;">Edit in Admin</a>
             </div>
             <p style="color: var(--text-secondary); font-size: 0.875rem; margin-bottom: 0.5rem;">
-                Sends interview slot emails to candidates and managers.
+                Prepares scheduled interviews from shortlisted candidates at the configured time.
+                You can then approve which interviews to email using the pending approvals below.
             </p>
             <p style="font-size: 0.875rem;">
-                <strong>Crontab schedule:</strong> {{ daily_scheduling_schedule|default:"—" }}
+                <strong>Crontab schedule:</strong> {{ daily_scheduling_schedule|default:"&mdash;" }}
             </p>
             <form action="{% url 'update_daily_scheduling' %}" method="post"
                 style="margin-top: 1rem; display: flex; flex-wrap: wrap; align-items: flex-end; gap: 0.75rem;">
                 {% csrf_token %}
                 <div style="display: flex; align-items: center; gap: 0.5rem;">
-                    <label for="id_hour" style="font-size: 0.875rem;">Hour (0–23)</label>
+                    <label for="id_hour" style="font-size: 0.875rem;">Hour (0&ndash;23)</label>
                     <input type="number" name="hour" id="id_hour" min="0" max="23"
                         value="{{ daily_scheduling_form.hour.value|default:'0' }}" class="form-control"
                         style="width: 4rem;">
                 </div>
                 <div style="display: flex; align-items: center; gap: 0.5rem;">
-                    <label for="id_minute" style="font-size: 0.875rem;">Minute (0–59)</label>
+                    <label for="id_minute" style="font-size: 0.875rem;">Minute (0&ndash;59)</label>
                     <input type="number" name="minute" id="id_minute" min="0" max="59"
                         value="{{ daily_scheduling_form.minute.value|default:'56' }}" class="form-control"
                         style="width: 4rem;">
@@ -308,8 +343,141 @@
             </form>
             {% if daily_scheduling_task %}
             <p style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.75rem;">
-                Task: {{ daily_scheduling_task.name|default:daily_scheduling_task.task }} ·
+                Task: {{ daily_scheduling_task.name|default:daily_scheduling_task.task }} &middot;
                 {% if daily_scheduling_task.enabled %}Enabled{% else %}Disabled{% endif %}
+            </p>
+            {% endif %}
+        </div>
+
+        <div class="section-card">
+            <div class="section-header">
+                <div class="section-title">Shortlists (top 5 per vacancy)</div>
+                <a href="/admin/vacancies/shortlist/" class="btn btn-outline"
+                    style="padding: 0.375rem 0.75rem; font-size: 0.8125rem; text-decoration: none;">In Admin</a>
+            </div>
+            <p style="color: var(--text-secondary); font-size: 0.875rem; margin-bottom: 1rem;">
+                Ranked by AI score (CV + questionnaire when replied). Used for daily interview scheduling.
+            </p>
+            {% for v in vacancies_with_shortlist %}
+            <div style="margin-bottom: 1rem;">
+                <strong style="font-size: 0.875rem;">{{ v.title }}</strong>
+                <table style="width:100%; font-size: 0.8125rem; margin-top: 0.5rem;">
+                    <thead>
+                        <tr style="color: var(--text-secondary);">
+                            <th style="text-align:left;">#</th>
+                            <th style="text-align:left;">Candidate</th>
+                            <th style="text-align:right;">Score</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for s in v.shortlists.all %}
+                        <tr>
+                            <td>{{ s.rank }}</td>
+                            <td>{{ s.candidate.full_name }}</td>
+                            <td style="text-align:right;">{{ s.ai_score }}/10</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% empty %}
+            <p style="font-size: 0.875rem; color: var(--text-secondary);">No shortlists yet. Shortlist is built when
+                applications are scored and when questionnaire replies are received.</p>
+            {% endfor %}
+        </div>
+
+        <div class="section-card">
+            <div class="section-header">
+                <div class="section-title">Pending Interview Approvals</div>
+            </div>
+            <p style="color: var(--text-secondary); font-size: 0.875rem; margin-bottom: 0.5rem;">
+                The <strong>daily interview scheduling task</strong> (or the manual button below) only adds shortlisted
+                candidates here &mdash; it does not send emails. Run it manually or at {{
+                daily_scheduling_schedule|default:"scheduled time" }} via Celery.
+            </p>
+            <form action="{% url 'run_daily_scheduling_now' %}" method="post" style="margin-bottom: 0.75rem;">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-outline" style="padding: 0.375rem 0.75rem; font-size: 0.8125rem;">
+                    Run daily scheduling now (manual)
+                </button>
+            </form>
+            <p style="color: var(--text-secondary); font-size: 0.875rem; margin-bottom: 0.75rem;">
+                Select candidates below and click <strong>Send interview emails for selected</strong> to schedule the
+                interview (pick a slot from the manager calendar) and send the interview emails.
+            </p>
+            {% if pending_interviews %}
+            <form action="{% url 'send_interview_notifications_dashboard' %}" method="post">
+                {% csrf_token %}
+                <table>
+                    <thead>
+                        <tr>
+                            <th></th>
+                            <th>Candidate</th>
+                            <th>Vacancy</th>
+                            <th>Scheduled At</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for interview in pending_interviews %}
+                        <tr>
+                            <td>
+                                <input type="checkbox" name="interview_ids" value="{{ interview.id }}">
+                            </td>
+                            <td>{{ interview.candidate.full_name }}</td>
+                            <td>{{ interview.vacancy.title }}</td>
+                            <td>{% if interview.scheduled_at %}{{ interview.scheduled_at|date:'M d, Y H:i' }}{% else
+                                %}&mdash;{% endif %}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                <button type="submit" class="btn btn-primary"
+                    style="margin-top: 0.75rem; padding: 0.375rem 0.75rem; font-size: 0.8125rem;">
+                    Send interview emails for selected
+                </button>
+            </form>
+            {% else %}
+            <p style="font-size: 0.875rem; color: var(--text-secondary);">
+                No pending interviews awaiting approval.
+            </p>
+            {% endif %}
+        </div>
+
+        <div class="section-card">
+            <div class="section-header">
+                <div class="section-title">Blue Collar Applications</div>
+            </div>
+            <p style="color: var(--text-secondary); font-size: 0.875rem; margin-bottom: 0.75rem;">
+                Leads captured from Facebook job posts where applicants only provide name and mobile.
+            </p>
+            {% if recent_blue_collar_leads %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Mobile</th>
+                        <th>Vacancy</th>
+                        <th>Received</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for lead in recent_blue_collar_leads %}
+                    <tr>
+                        <td>{{ lead.full_name }}</td>
+                        <td>{{ lead.phone }}</td>
+                        <td>{{ lead.vacancy.title }}</td>
+                        <td>{{ lead.created_at|date:'M d, Y H:i' }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            <p style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.5rem;">
+                Total blue collar leads: {{ blue_collar_leads_total|default:0 }}
+            </p>
+            {% else %}
+            <p style="font-size: 0.875rem; color: var(--text-secondary);">
+                No blue collar applications captured yet. Once Facebook posts include the apply link, new leads will
+                appear here.
             </p>
             {% endif %}
         </div>

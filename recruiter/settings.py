@@ -36,7 +36,6 @@ INSTALLED_APPS = [
 
     # Third-party
     'rest_framework',
-    'django_celery_beat',
 
     # Local apps
     'core',
@@ -46,6 +45,13 @@ INSTALLED_APPS = [
     'comms',
     'ai',
 ]
+
+# Add Celery apps only if celery is installed (so runserver works without it)
+try:
+    import celery  # noqa: F401
+    INSTALLED_APPS.append('django_celery_beat')
+except ImportError:
+    pass
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -78,14 +84,29 @@ WSGI_APPLICATION = 'recruiter.wsgi.application'
 
 
 # Database
+_db_host = config('POSTGRES_HOST', default='localhost', cast=str)
+# When running locally (not in Docker), "db" is not resolvable; use localhost.
+if _db_host == 'db' and not os.path.exists('/.dockerenv'):
+    _db_host = 'localhost'
+
+_db_user = config('POSTGRES_USER', default='ai_user', cast=str)
+_db_password = config('POSTGRES_PASSWORD', default='', cast=str)
+# On local PostgreSQL (e.g. Mac), the role "ai_user" often doesn't exist; use current OS user.
+if _db_host == 'localhost' and _db_user == 'ai_user':
+    try:
+        import getpass
+        _db_user = getpass.getuser()
+    except Exception:
+        pass
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': config('POSTGRES_DB', cast=str),
-        'USER': config('POSTGRES_USER', cast=str),
-        'PASSWORD': config('POSTGRES_PASSWORD', cast=str),
-        'HOST': config('POSTGRES_HOST', cast=str),  # matches docker-compose service name
-        'PORT': config('POSTGRES_PORT', cast=str),
+        'NAME': config('POSTGRES_DB', default='ai_agent', cast=str),
+        'USER': _db_user,
+        'PASSWORD': _db_password,
+        'HOST': _db_host,
+        'PORT': config('POSTGRES_PORT', default='5432', cast=str),
     }
 }
 
@@ -154,6 +175,8 @@ DEFAULT_MANAGER_EMAIL = os.environ.get('DEFAULT_MANAGER_EMAIL') or config('DEFAU
 AI_RECRUITER_EMAIL = os.environ.get('AI_RECRUITER_EMAIL') or config('AI_RECRUITER_EMAIL', default='')
 APPLICATION_EMAIL = os.environ.get('APPLICATION_EMAIL') or config('APPLICATION_EMAIL', default='')
 DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', config('DEFAULT_FROM_EMAIL', default=None)) or EMAIL_HOST_USER
+# Approval email subject; use {title} for vacancy title. Minimal default to avoid SMTP policy blocks.
+APPROVAL_EMAIL_SUBJECT = os.environ.get('APPROVAL_EMAIL_SUBJECT', config('APPROVAL_EMAIL_SUBJECT', default='{title}'))
 
 ##you'll have working endpoints:
 #http://localhost:8040/api/users/

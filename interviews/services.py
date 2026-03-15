@@ -7,6 +7,7 @@ from typing import List, Dict, Any
 import logging
 from .zoho_api_service import CalendarDiscoveryService, SimpleCalDavClient
 from django.core.mail import send_mail
+from core.email_utils import email_subject
 
 
 logger = logging.getLogger(__name__)
@@ -361,7 +362,7 @@ class InterviewSchedulingService:
             
             for interview in interviews:
                 # Send notification to manager
-                manager_subject = f"Interview Scheduled: {interview.candidate.full_name} - {interview.vacancy.title}"
+                manager_subject = email_subject(f"Interview Scheduled: {interview.candidate.full_name} - {interview.vacancy.title}")
                 manager_message = f"""
 Dear {interview.manager.get_full_name() or interview.manager.username},
 
@@ -389,7 +390,7 @@ Fahmy
                 )
                 
                 # Send notification to candidate
-                candidate_subject = f"Interview Invitation: {interview.vacancy.title}"
+                candidate_subject = email_subject(f"Interview Invitation: {interview.vacancy.title}")
                 candidate_message = f"""
 Dear {interview.candidate.full_name},
 
@@ -447,10 +448,10 @@ Best regards,
             start_local = slot_start.astimezone(local_tz)
             end_local = (slot_start + timedelta(minutes=duration_minutes)).astimezone(local_tz)
 
-            subject_mgr = f"Free Interview Slot Available - {vacancy_title}"
+            subject_mgr = email_subject(f"Free Interview Slot Available - {vacancy_title}")
             msg_mgr = f"A free slot is available at {start_local.strftime('%Y-%m-%d %H:%M')} - {end_local.strftime('%H:%M')} ({duration_minutes}m) with the following shortlisted candidate:\n{candidate_email}\n Please confirm to proceed."
 
-            subject_cand = f"Interview Slot Proposal - {vacancy_title}"
+            subject_cand = email_subject(f"Interview Slot Proposal - {vacancy_title}")
             msg_cand = f"We propose an interview at {start_local.strftime('%Y-%m-%d %H:%M')} - {end_local.strftime('%H:%M')} ({duration_minutes}m).\nReply to confirm or request another time."
 
             send_mail(subject_mgr, msg_mgr, settings.DEFAULT_FROM_EMAIL, [manager_email], fail_silently=False)
@@ -469,7 +470,7 @@ Best regards,
             start_local = interview.scheduled_at.astimezone(local_tz)
             end_local = (interview.scheduled_at + timedelta(minutes=interview.duration_minutes)).astimezone(local_tz)
             
-            subject = f"Feedback Request: {interview.vacancy.title} - {candidate_name}"
+            subject = email_subject(f"Feedback Request: {interview.vacancy.title} - {candidate_name}")
             message = (
                 f"Dear {interview.manager.get_full_name() or interview.manager.username},\n\n"
                 f"Please provide feedback for your interview with {candidate_name}.\n\n"

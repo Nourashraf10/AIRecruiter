@@ -113,6 +113,7 @@ class CandidateVacancyProfile(models.Model):
     # Questionnaire response information
     questionnaire_response = models.TextField(blank=True, help_text='Candidate questionnaire response (full email body)')
     questionnaire_response_date = models.DateTimeField(null=True, blank=True, help_text='When questionnaire response was received')
+    questionnaire_email_sent_at = models.DateTimeField(null=True, blank=True, help_text='When questionnaire email was last sent (avoid duplicate sends)')
     
     # Interview information
     interview_scheduled = models.BooleanField(default=False, help_text='Whether interview was scheduled')
@@ -136,3 +137,19 @@ class QuestionnaireResponse(models.Model):
     application = models.OneToOneField(Application, on_delete=models.CASCADE, related_name='questionnaire')
     answers = models.TextField()   # store JSON/text answers
     submitted_at = models.DateTimeField(null=True, blank=True)
+
+
+class BlueCollarLead(models.Model):
+    """Simple lead captured from blue-collar Facebook job posts (name + mobile only)."""
+    full_name = models.CharField(max_length=200)
+    phone = models.CharField(max_length=50)
+    vacancy = models.ForeignKey(Vacancy, on_delete=models.CASCADE, related_name='blue_collar_leads')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = 'Blue Collar Lead'
+        verbose_name_plural = 'Blue Collar Leads'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.full_name} ({self.phone}) - {self.vacancy.title}"
