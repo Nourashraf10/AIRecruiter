@@ -250,8 +250,7 @@ class ZohoMailMonitor:
                 logger.info("Found 0 unread emails in INBOX")
                 return []
             
-            # Filter by subject containing "[bit68 -open vacancy]" (case-insensitive)
-            vacancy_key = "[bit68 -open vacancy]"
+            # Filter by subject containing "open vacancy" (case-insensitive); prefer "[bit68 -open vacancy]"
             matched = []
             for uid in uids:
                 uid_str = uid.decode('utf-8') if isinstance(uid, bytes) else str(uid)
@@ -271,7 +270,8 @@ class ZohoMailMonitor:
                         continue
                     if isinstance(raw, bytes):
                         raw = raw.decode('utf-8', errors='ignore')
-                    if vacancy_key in raw.lower():
+                    subj_lower = raw.lower()
+                    if 'open vacancy' in subj_lower:
                         matched.append(uid_str)
                 except Exception:
                     continue
@@ -305,7 +305,7 @@ class ZohoMailMonitor:
                     if p.get_content_type() == "text/plain":
                         body = p.get_payload(decode=True).decode('utf-8', errors='ignore')
                         break
-                # If no text/plain (HTML-only email), use text/html and strip tags so API can parse Manager Email etc.
+                # If no text/plain (HTML-only email), use text/html and strip tags so API can parse Title:, Manager Email:, etc.
                 if not body or not body.strip():
                     for p in email_message.walk():
                         if p.get_content_type() == "text/html":
@@ -313,8 +313,12 @@ class ZohoMailMonitor:
                             if raw:
                                 import re
                                 html = raw.decode('utf-8', errors='ignore')
+                                # Replace block boundaries with newlines so "Title: X</p><p>Department: Y" becomes separate lines
+                                html = re.sub(r'</(?:p|div|br|tr|li)\s*>', '\n', html, flags=re.IGNORECASE)
+                                html = re.sub(r'<br\s*/?>', '\n', html, flags=re.IGNORECASE)
                                 body = re.sub(r'<[^>]+>', ' ', html)
-                                body = re.sub(r'\s+', ' ', body).strip()
+                                body = re.sub(r'[ \t]+', ' ', body)
+                                body = re.sub(r'\n\s*\n', '\n', body).strip()
                             break
             else:
                 body = email_message.get_payload(decode=True).decode('utf-8', errors='ignore')
@@ -351,7 +355,14 @@ class ZohoMailMonitor:
                 )
                 
                 if response.status_code in [200, 201]:
-                    logger.info(f"✅ Email sent to Django API successfully at {url}")
+                    if response.status_code == 201:
+                        logger.info(f"✅ Vacancy created via Django API at {url}")
+                    else:
+                        try:
+                            detail = response.json().get("detail", response.text[:200])
+                            logger.info(f"✅ Django API responded 200 at {url}: {detail}")
+                        except Exception:
+                            logger.info(f"✅ Email sent to Django API at {url}")
                     return True
                 else:
                     logger.warning(f"⚠️ Django API returned {response.status_code} at {url}: {response.text}")

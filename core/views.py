@@ -443,35 +443,26 @@ class VacancyStatusView(TemplateView):
 
 
 class ApproveVacancyView(View):
-    """Approve a vacancy and trigger LinkedIn automation."""
+    """Approve a vacancy and trigger posting: blue-collar → Facebook only, else → LinkedIn only."""
     
     def post(self, request, pk):
         try:
             vacancy = Vacancy.objects.get(pk=pk)
-            # Set to 'approved' temporarily so the LinkedIn poster can validate status
             vacancy.status = 'approved'
             vacancy.save()
-            
-            # Trigger LinkedIn automation (same as email approval flow)
-            from ai.linkedin_poster import LinkedInVacancyPoster
-            from django.conf import settings
-            
-            if getattr(settings, 'LINKEDIN_POSTING_ENABLED', False):
+
+            if vacancy.is_blue_collar:
+                # Blue-collar (e.g. office boy): post to Facebook only
+                from comms.tasks import post_vacancy_to_facebook_sync
                 try:
-                    print(f"🤖 Starting automated LinkedIn posting for: {vacancy.title}")
-                    poster = LinkedInVacancyPoster(vacancy)
-                    linkedin_result = poster.execute()
-                    
-                    if linkedin_result and linkedin_result.get('success'):
-                        # poster.execute() already saved status = 'collecting_applications'
+                    print(f"🤖 Starting Facebook posting for blue-collar vacancy: {vacancy.title}")
+                    fb_result = post_vacancy_to_facebook_sync(vacancy.id)
+                    if fb_result.get('success'):
                         messages.success(
                             request,
-                            f'Vacancy "{vacancy.title}" approved and posted to LinkedIn! '
-                            f'Now collecting applications. URL: {linkedin_result.get("url", "N/A")}'
+                            f'Vacancy "{vacancy.title}" approved and posted to Facebook. Now collecting applications.'
                         )
                     else:
-                        error_msg = linkedin_result.get('error', 'Unknown error') if linkedin_result else 'No result returned'
-                        # LinkedIn failed — still move to collecting_applications
                         vacancy.refresh_from_db()
                         if vacancy.status == 'approved':
                             vacancy.status = 'collecting_applications'
@@ -479,10 +470,9 @@ class ApproveVacancyView(View):
                         messages.warning(
                             request,
                             f'Vacancy "{vacancy.title}" approved and set to collecting applications, '
-                            f'but LinkedIn posting failed: {error_msg}'
+                            f'but Facebook posting failed: {fb_result.get("error", "Unknown error")}'
                         )
                 except Exception as e:
-                    # LinkedIn error — still move to collecting_applications
                     vacancy.refresh_from_db()
                     if vacancy.status == 'approved':
                         vacancy.status = 'collecting_applications'
@@ -490,24 +480,63 @@ class ApproveVacancyView(View):
                     messages.warning(
                         request,
                         f'Vacancy "{vacancy.title}" approved and set to collecting applications, '
-                        f'but LinkedIn posting error: {str(e)}'
+                        f'but Facebook posting error: {str(e)}'
                     )
                     import traceback
                     traceback.print_exc()
             else:
-                # LinkedIn disabled — go straight to collecting applications
-                vacancy.status = 'collecting_applications'
-                vacancy.save(update_fields=['status'])
-                messages.success(
-                    request,
-                    f'Vacancy "{vacancy.title}" approved and is now collecting applications.'
-                )
+                # Normal vacancy (e.g. backend): post to LinkedIn only
+                from ai.linkedin_poster import LinkedInVacancyPoster
+                from django.conf import settings
+
+                if getattr(settings, 'LINKEDIN_POSTING_ENABLED', False):
+                    try:
+                        print(f"🤖 Starting automated LinkedIn posting for: {vacancy.title}")
+                        poster = LinkedInVacancyPoster(vacancy)
+                        linkedin_result = poster.execute()
+
+                        if linkedin_result and linkedin_result.get('success'):
+                            messages.success(
+                                request,
+                                f'Vacancy "{vacancy.title}" approved and posted to LinkedIn! '
+                                f'Now collecting applications. URL: {linkedin_result.get("url", "N/A")}'
+                            )
+                        else:
+                            error_msg = linkedin_result.get('error', 'Unknown error') if linkedin_result else 'No result returned'
+                            vacancy.refresh_from_db()
+                            if vacancy.status == 'approved':
+                                vacancy.status = 'collecting_applications'
+                                vacancy.save(update_fields=['status'])
+                            messages.warning(
+                                request,
+                                f'Vacancy "{vacancy.title}" approved and set to collecting applications, '
+                                f'but LinkedIn posting failed: {error_msg}'
+                            )
+                    except Exception as e:
+                        vacancy.refresh_from_db()
+                        if vacancy.status == 'approved':
+                            vacancy.status = 'collecting_applications'
+                            vacancy.save(update_fields=['status'])
+                        messages.warning(
+                            request,
+                            f'Vacancy "{vacancy.title}" approved and set to collecting applications, '
+                            f'but LinkedIn posting error: {str(e)}'
+                        )
+                        import traceback
+                        traceback.print_exc()
+                else:
+                    vacancy.status = 'collecting_applications'
+                    vacancy.save(update_fields=['status'])
+                    messages.success(
+                        request,
+                        f'Vacancy "{vacancy.title}" approved and is now collecting applications.'
+                    )
 
         except Vacancy.DoesNotExist:
             messages.error(request, 'Vacancy not found.')
         except Exception as e:
             messages.error(request, f'Error approving vacancy: {str(e)}')
-        
+
         return redirect('vacancy_status')
 
 

@@ -1,4 +1,5 @@
 # vacancies/models.py
+import re
 from django.conf import settings
 from django.db import models
 
@@ -38,6 +39,25 @@ class Vacancy(models.Model):
 
     def keyword_list(self):
         return [k.strip().lower() for k in self.keywords.split(',') if k.strip()]
+
+    def _normalize_dept(self, s):
+        """Normalize department string for comparison: lowercase, no spaces/dashes/underscores."""
+        if not s:
+            return ''
+        return re.sub(r'[\s\-_]', '', (s or '').strip().lower())
+
+    @property
+    def is_blue_collar(self):
+        """True if this vacancy is blue-collar (e.g. office boy); post to Facebook only. Else post to LinkedIn only."""
+        from django.conf import settings as django_settings
+        departments = getattr(django_settings, 'BLUE_COLLAR_DEPARTMENTS', ())
+        if not departments:
+            return False
+        dept_norm = self._normalize_dept(self.department)
+        if not dept_norm:
+            return False
+        allowed_norm = [self._normalize_dept(d) for d in departments if d and d.strip()]
+        return dept_norm in allowed_norm
 
     def __str__(self):
         return f"{self.title} ({self.department})"

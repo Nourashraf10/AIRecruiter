@@ -227,6 +227,13 @@ CELERY_BEAT_SCHEDULE = {
 # OpenAI Configuration
 OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY', '')
 
+# Blue-collar departments: vacancies with these departments post to Facebook only; others post to LinkedIn only.
+# Include both "Blue Collar" and "BlueCollar" so open-vacancy emails match either.
+BLUE_COLLAR_DEPARTMENTS = [
+    d.strip() for d in os.environ.get('BLUE_COLLAR_DEPARTMENTS', 'Office,Office Boy,Blue Collar,BlueCollar').split(',')
+    if d and d.strip()
+]
+
 # LinkedIn Automation Configuration
 LINKEDIN_EMAIL = os.environ.get('LINKEDIN_EMAIL', '')
 LINKEDIN_PASSWORD = os.environ.get('LINKEDIN_PASSWORD', '')

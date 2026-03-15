@@ -132,7 +132,7 @@ class InboundEmailView(APIView):
 
             return Response({"detail": "from_address and body are required"}, status=status.HTTP_400_BAD_REQUEST)
 
-
+        logger.info(f"[inbound] Received Open Vacancy email subject=%r body_len=%d", subject[:80] if subject else "", len(body or ""))
 
         # Persist the raw email
 
@@ -236,11 +236,19 @@ class InboundEmailView(APIView):
 
         payload = self._parse_vacancy_email(body_for_parsing or body)
 
-        
+        logger.info(
+
+            "[inbound] Parsed payload title=%r department=%r manager_email=%r",
+
+            payload.get("title"), payload.get("department"), payload.get("manager_email") or "(none)",
+
+        )
 
         # Require a real title: reject default "New Vacancy" to avoid spam from repeated/malformed emails
 
         if not payload.get('title') or (payload['title'] or '').strip() == '' or payload['title'].strip().lower() == 'new vacancy':
+
+            logger.warning("[inbound] Skipped: no valid title (body must include 'Title: <job title>'). Parsed title=%r", payload.get("title"))
 
             incoming.processed = True
 
@@ -280,6 +288,10 @@ class InboundEmailView(APIView):
 
         if recent.exists():
 
+            existing_id = recent.first().id
+
+            logger.warning("[inbound] Skipped: duplicate (same title+manager in last 1h). existing_vacancy_id=%s", existing_id)
+
             incoming.processed = True
 
             incoming.save(update_fields=['processed'])
@@ -290,7 +302,7 @@ class InboundEmailView(APIView):
 
                 "incoming_email_id": incoming.id,
 
-                "existing_vacancy_id": recent.first().id,
+                "existing_vacancy_id": existing_id,
 
             }, status=status.HTTP_200_OK)
 
@@ -434,7 +446,7 @@ class InboundEmailView(APIView):
 
         incoming.save(update_fields=['processed'])
 
-
+        logger.info("[inbound] Created vacancy id=%s title=%s department=%s", vacancy.id, vacancy.title, vacancy.department)
 
         return Response({
 
@@ -560,7 +572,7 @@ class InboundEmailView(APIView):
 
                 
 
-                if key == 'title':
+                if key in ('title', 'vacancy', 'job_title', 'jobtitle'):
 
                     payload['title'] = value
 
@@ -580,21 +592,21 @@ class InboundEmailView(APIView):
 
                     payload['keywords'] = value
 
-                elif key == 'requiredob':
+                elif key in ('requiredob', 'require_dob'):
 
-                    payload['require_dob'] = value.lower() == 'true'
+                    payload['require_dob'] = value.lower() in ('true', '1', 'yes')
 
-                elif key == 'require_egyptian':
+                elif key in ('require_egyptian', 'requireegyptian'):
 
-                    payload['require_egyptian'] = value.lower() == 'true'
+                    payload['require_egyptian'] = value.lower() in ('true', '1', 'yes')
 
-                elif key == 'relevant_university':
+                elif key in ('relevant_university', 'relevantuniversity'):
 
-                    payload['require_relevant_university'] = value.lower() == 'true'
+                    payload['require_relevant_university'] = value.lower() in ('true', '1', 'yes')
 
-                elif key == 'relevant_major':
+                elif key in ('relevant_major', 'relevantmajor'):
 
-                    payload['require_relevant_major'] = value.lower() == 'true'
+                    payload['require_relevant_major'] = value.lower() in ('true', '1', 'yes')
 
                 elif key == 'questionnaire':
 
@@ -1384,238 +1396,141 @@ class ApprovalLandingView(View):
 
                 vacancy.save(update_fields=['status'])
 
-
-
-                # --- Step 1: Facebook auto-posting ---
-
-                print(f"Starting Facebook post for vacancy {vacancy.id} ({vacancy.title})")
-
-                fb_result = post_vacancy_to_facebook_sync(vacancy.id)
-
-                if fb_result.get("success"):
-
-                    print(f"Facebook posting succeeded for vacancy {vacancy.id}")
-
-                    fb_success = True
-
-                else:
-
-                    print(f"Facebook posting failed for vacancy {vacancy.id}: {fb_result.get('error')}")
-
-                    fb_success = False
-
-
-
-                # --- Step 2: LinkedIn auto-posting (if enabled) ---
-
+                fb_success = False
                 linkedin_result = None
-
                 linkedin_error = None
 
+                if vacancy.is_blue_collar:
+                    # Blue-collar (e.g. office boy): post to Facebook only
+                    print(f"Starting Facebook post for blue-collar vacancy {vacancy.id} ({vacancy.title})")
+                    fb_result = post_vacancy_to_facebook_sync(vacancy.id)
+                    if fb_result.get("success"):
+                        print(f"Facebook posting succeeded for vacancy {vacancy.id}")
+                        fb_success = True
+                    else:
+                        print(f"Facebook posting failed for vacancy {vacancy.id}: {fb_result.get('error')}")
+                else:
+                    # Normal vacancy (e.g. backend): post to LinkedIn only
+                    if getattr(settings, 'LINKEDIN_POSTING_ENABLED', False):
+                        try:
+                            print(f"Starting automated LinkedIn posting for: {vacancy.title}")
+                            from ai.linkedin_poster import LinkedInVacancyPoster
+                            poster = LinkedInVacancyPoster(vacancy)
+                            linkedin_result = poster.execute()
+                            if linkedin_result and linkedin_result.get('success'):
+                                print(f"LinkedIn posting successful: {linkedin_result['url']}")
+                            else:
+                                linkedin_error = (linkedin_result or {}).get('error', 'Unknown error')
+                                print(f"LinkedIn posting failed: {linkedin_error}")
+                        except Exception as e:
+                            linkedin_error = str(e)
+                            print(f"LinkedIn automation error: {str(e)}")
+                            import traceback
+                            traceback.print_exc()
 
-
-                if getattr(settings, 'LINKEDIN_POSTING_ENABLED', False):
-
-                    try:
-
-                        print(f"Starting automated LinkedIn posting for: {vacancy.title}")
-
-                        from ai.linkedin_poster import LinkedInVacancyPoster
-
-                        poster = LinkedInVacancyPoster(vacancy)
-
-                        linkedin_result = poster.execute()
-
-                        if linkedin_result['success']:
-
-                            print(f"LinkedIn posting successful: {linkedin_result['url']}")
-
-                        else:
-
-                            linkedin_error = linkedin_result.get('error', 'Unknown error')
-
-                            print(f"LinkedIn posting failed: {linkedin_error}")
-
-                    except Exception as e:
-
-                        linkedin_error = str(e)
-
-                        print(f"LinkedIn automation error: {str(e)}")
-
-                        import traceback
-
-                        traceback.print_exc()
-
-
-
-                # --- Step 3: Always transition to collecting_applications ---
-
+                # --- Transition to collecting_applications ---
                 vacancy.refresh_from_db()
-
                 if vacancy.status == 'approved':
-
                     vacancy.status = 'collecting_applications'
-
                     vacancy.save(update_fields=['status'])
 
-
-
-                # --- Step 4: Build status message for the approval page ---
-
-                if fb_success and linkedin_result and linkedin_result.get('success'):
-
-                    status_msg = 'Vacancy approved! Posted to Facebook and LinkedIn automatically.'
-
-                elif fb_success:
-
-                    status_msg = 'Vacancy approved and posted to Facebook automatically.'
-
-                    if linkedin_error:
-
-                        status_msg += f' (LinkedIn posting failed: {linkedin_error})'
-
-                elif linkedin_result and linkedin_result.get('success'):
-
-                    status_msg = (
-
-                        f'Vacancy approved and posted to LinkedIn: {linkedin_result["url"]}.'
-
-                        ' Facebook posting failed.'
-
-                    )
-
+                # --- Build status message for the approval page ---
+                if vacancy.is_blue_collar:
+                    if fb_success:
+                        status_msg = 'Vacancy approved and posted to Facebook automatically.'
+                    else:
+                        status_msg = 'Vacancy approved, but Facebook posting failed. Please post manually.'
                 else:
+                    if linkedin_result and linkedin_result.get('success'):
+                        status_msg = (
+                            f'Vacancy approved and posted to LinkedIn: {linkedin_result["url"]}.'
+                        )
+                    elif linkedin_error:
+                        status_msg = f'Vacancy approved, but LinkedIn posting failed: {linkedin_error}. Please post manually.'
+                    else:
+                        status_msg = 'Vacancy approved and set to collecting applications.'
 
-                    status_msg = 'Vacancy approved, but automatic posting failed. Please post manually.'
-
-                    if linkedin_error:
-
-                        status_msg += f' LinkedIn error: {linkedin_error}'
 
 
-
-                # --- Step 5: Send HR notification email ---
-
-                if linkedin_result and linkedin_result.get('success'):
-
-                    subject = f"Vacancy Posted to LinkedIn: {vacancy.title}"
-
+                # --- Send HR notification email (subject must use [bit68 - ...] for SMTP policy) ---
+                if vacancy.is_blue_collar and fb_success:
+                    subject = email_subject(f"Vacancy Posted to Facebook: {vacancy.title}")
                     message = (
-
                         f"Hello HR Team,\n\n"
-
-                        f"Great news! The vacancy has been approved and automatically posted to LinkedIn:\n\n"
-
+                        f"Great news! The vacancy has been approved and automatically posted to Facebook:\n\n"
                         f"Vacancy: {vacancy.title}\n"
-
                         f"Department: {vacancy.department}\n"
-
                         f"Keywords: {vacancy.keywords}\n"
-
                         f"Manager: {vacancy.manager.get_full_name() or vacancy.manager.email}\n\n"
-
-                        f"LinkedIn URL: {linkedin_result['url']}\n\n"
-
                         f"The system is now collecting applications automatically.\n\nBest regards,\nFahmy"
-
                     )
-
                     html_content = (
-
                         f"<p>Hello HR Team,</p>"
-
-                        f"<p><strong>Great news!</strong> The vacancy has been approved and automatically posted to LinkedIn:</p>"
-
+                        f"<p><strong>Great news!</strong> The vacancy has been approved and automatically posted to Facebook:</p>"
                         f"<ul>"
-
                         f"<li><strong>Vacancy:</strong> {vacancy.title}</li>"
-
                         f"<li><strong>Department:</strong> {vacancy.department}</li>"
-
                         f"<li><strong>Keywords:</strong> {vacancy.keywords}</li>"
-
                         f"<li><strong>Manager:</strong> {vacancy.manager.get_full_name() or vacancy.manager.email}</li>"
-
                         f"</ul>"
-
-                        f"<p><strong>LinkedIn URL:</strong> <a href=\"{linkedin_result['url']}\">{linkedin_result['url']}</a></p>"
-
                         f"<p>The system is now collecting applications automatically.</p>"
-
                         f"<p>Best regards,<br/>Fahmy</p>"
-
                     )
-
-                else:
-
-                    subject = f"New Vacancy Approved: {vacancy.title}"
-
-                    fb_note = (
-
-                        "Facebook posting is being handled automatically by the AI recruiter."
-
-                        if fb_success else
-
-                        "Facebook posting failed — please post manually."
-
-                    )
-
-                    li_note = ""
-
-                    if linkedin_error:
-
-                        li_note = f"\nLinkedIn posting failed: {linkedin_error} — please post manually."
-
-                    elif not getattr(settings, 'LINKEDIN_POSTING_ENABLED', False):
-
-                        li_note = "\nAutomated LinkedIn posting is disabled."
-
-
-
+                elif not vacancy.is_blue_collar and linkedin_result and linkedin_result.get('success'):
+                    subject = email_subject(f"Vacancy Posted to LinkedIn: {vacancy.title}")
                     message = (
-
                         f"Hello HR Team,\n\n"
-
-                        f"A new vacancy has been approved:\n\n"
-
+                        f"Great news! The vacancy has been approved and automatically posted to LinkedIn:\n\n"
                         f"Vacancy: {vacancy.title}\n"
-
                         f"Department: {vacancy.department}\n"
-
                         f"Keywords: {vacancy.keywords}\n"
-
                         f"Manager: {vacancy.manager.get_full_name() or vacancy.manager.email}\n\n"
-
-                        f"{fb_note}{li_note}\n\nBest regards,\nFahmy"
-
+                        f"LinkedIn URL: {linkedin_result['url']}\n\n"
+                        f"The system is now collecting applications automatically.\n\nBest regards,\nFahmy"
                     )
-
-                    li_html = f"<p>{li_note.strip()}</p>" if li_note.strip() else ""
-
                     html_content = (
-
                         f"<p>Hello HR Team,</p>"
-
-                        f"<p>A new vacancy has been approved:</p>"
-
+                        f"<p><strong>Great news!</strong> The vacancy has been approved and automatically posted to LinkedIn:</p>"
                         f"<ul>"
-
                         f"<li><strong>Vacancy:</strong> {vacancy.title}</li>"
-
                         f"<li><strong>Department:</strong> {vacancy.department}</li>"
-
                         f"<li><strong>Keywords:</strong> {vacancy.keywords}</li>"
-
                         f"<li><strong>Manager:</strong> {vacancy.manager.get_full_name() or vacancy.manager.email}</li>"
-
                         f"</ul>"
-
-                        f"<p>{fb_note}</p>"
-
-                        f"{li_html}"
-
+                        f"<p><strong>LinkedIn URL:</strong> <a href=\"{linkedin_result['url']}\">{linkedin_result['url']}</a></p>"
+                        f"<p>The system is now collecting applications automatically.</p>"
                         f"<p>Best regards,<br/>Fahmy</p>"
-
+                    )
+                else:
+                    subject = email_subject(f"New Vacancy Approved: {vacancy.title}")
+                    if vacancy.is_blue_collar:
+                        post_note = "Facebook posting failed — please post manually." if not fb_success else "Posted to Facebook."
+                    else:
+                        post_note = (
+                            f"LinkedIn posting failed: {linkedin_error} — please post manually."
+                            if linkedin_error
+                            else "Automated LinkedIn posting is disabled."
+                        )
+                    message = (
+                        f"Hello HR Team,\n\n"
+                        f"A new vacancy has been approved:\n\n"
+                        f"Vacancy: {vacancy.title}\n"
+                        f"Department: {vacancy.department}\n"
+                        f"Keywords: {vacancy.keywords}\n"
+                        f"Manager: {vacancy.manager.get_full_name() or vacancy.manager.email}\n\n"
+                        f"{post_note}\n\nBest regards,\nFahmy"
+                    )
+                    html_content = (
+                        f"<p>Hello HR Team,</p>"
+                        f"<p>A new vacancy has been approved:</p>"
+                        f"<ul>"
+                        f"<li><strong>Vacancy:</strong> {vacancy.title}</li>"
+                        f"<li><strong>Department:</strong> {vacancy.department}</li>"
+                        f"<li><strong>Keywords:</strong> {vacancy.keywords}</li>"
+                        f"<li><strong>Manager:</strong> {vacancy.manager.get_full_name() or vacancy.manager.email}</li>"
+                        f"</ul>"
+                        f"<p>{post_note}</p>"
+                        f"<p>Best regards,<br/>Fahmy</p>"
                     )
 
 

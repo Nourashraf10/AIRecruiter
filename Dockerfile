@@ -1,5 +1,5 @@
-# Use official Python image
-FROM python:3.10-slim
+# Use official Python image (pin to Bookworm for stable mirrors; avoids Trixie network issues)
+FROM python:3.10-slim-bookworm
 
 # Set working directory
 WORKDIR /app
@@ -8,15 +8,12 @@ WORKDIR /app
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
 
-# Install system dependencies for Playwright Chromium
-RUN apt-get update && apt-get install -y \
-    # Core utilities
+# Install system dependencies for Playwright Chromium (retry once on network failure)
+RUN apt-get update && (apt-get install -y \
     wget \
     ca-certificates \
-    # Fonts
     fonts-liberation \
     fonts-noto-color-emoji \
-    # Required libraries for Chromium
     libasound2 \
     libatk-bridge2.0-0 \
     libatk1.0-0 \
@@ -37,6 +34,12 @@ RUN apt-get update && apt-get install -y \
     libxcb1 \
     libxext6 \
     libglib2.0-0 \
+    || (sleep 10 && apt-get update && apt-get install -y \
+        wget ca-certificates fonts-liberation fonts-noto-color-emoji \
+        libasound2 libatk-bridge2.0-0 libatk1.0-0 libatspi2.0-0 libcups2 \
+        libdbus-1-3 libdrm2 libgbm1 libgtk-3-0 libnspr4 libnss3 \
+        libxcomposite1 libxdamage1 libxfixes3 libxkbcommon0 libxrandr2 \
+        libx11-6 libxcb1 libxext6 libglib2.0-0)) \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Python dependencies

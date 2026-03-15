@@ -200,8 +200,7 @@
                     <tr>
                         <td>
                             <strong>{{ v.title }}</strong><br>
-                            <span style="color:var(--text-secondary); font-size:0.75rem;">{{ v.created_at|date:'M d, Y'
-                                }}</span>
+                            <span style="color:var(--text-secondary); font-size:0.75rem;">{{ v.created_at|date:"M d, Y" }}</span>
                         </td>
                         <td>{{ v.department }}</td>
                         <td>
@@ -231,13 +230,11 @@
             {% for app in recent_applications %}
             <div class="list-item">
                 <div class="item-main">
-                    <span class="item-title">{% if app.cv.candidate %}{{ app.cv.candidate.full_name }}{% else
-                        %}&mdash;{% endif %}</span>
+                    <span class="item-title">{% if app.cv.candidate %}{{ app.cv.candidate.full_name }}{% else %}&mdash;{% endif %}</span>
                     <span class="item-sub">{{ app.vacancy.title }}</span>
                 </div>
                 <div style="display: flex; align-items: center; gap: 0.5rem;">
-                    <span style="font-size:0.75rem; color:var(--text-secondary);">{% if app.cv.candidate %}Avg Score: {{
-                        app.cv.candidate.ai_score_out_of_10|default:'-' }}{% endif %}</span>
+                    <span style="font-size:0.75rem; color:var(--text-secondary);">{% if app.cv.candidate %}Avg Score: {{ app.cv.candidate.ai_score_out_of_10|default:"-" }}{% endif %}</span>
                     {% if app.cv.candidate %}
                     <form action="{% url 'dashboard_delete_candidate' app.cv.candidate.pk %}" method="post"
                         style="display:inline;"
@@ -262,8 +259,7 @@
             <div class="list-item">
                 <div class="item-main">
                     <span class="item-title">{{ interview.candidate.full_name }}</span>
-                    <span class="item-sub">{{ interview.vacancy.title }} &ndash; {{ interview.scheduled_at|date:'M d,
-                        H:i' }}</span>
+                    <span class="item-sub">{{ interview.vacancy.title }} &ndash; {{ interview.scheduled_at|date:"M d, H:i" }}</span>
                 </div>
                 <a href="{% url 'interview_edit' interview.pk %}?next={% url 'recruiter_dashboard' %}"
                     class="btn btn-outline"
@@ -290,8 +286,7 @@
             <div class="list-item">
                 <div class="item-main">
                     <span class="item-title">{{ p.candidate.full_name }}</span>
-                    <span class="item-sub">{{ p.vacancy.title }}{% if p.ai_score %} &middot; {{ p.ai_score }}{% endif
-                        %}</span>
+                    <span class="item-sub">{{ p.vacancy.title }}{% if p.ai_score %} &middot; {{ p.ai_score }}{% endif %}</span>
                 </div>
                 <div style="display: flex; align-items: center; gap: 0.5rem;">
                     <a href="{% url 'candidate_profile_detail' p.pk %}" class="btn btn-outline"
@@ -425,8 +420,7 @@
                             </td>
                             <td>{{ interview.candidate.full_name }}</td>
                             <td>{{ interview.vacancy.title }}</td>
-                            <td>{% if interview.scheduled_at %}{{ interview.scheduled_at|date:'M d, Y H:i' }}{% else
-                                %}&mdash;{% endif %}</td>
+                            <td>{% if interview.scheduled_at %}{{ interview.scheduled_at|date:"M d, Y H:i" }}{% else %}&mdash;{% endif %}</td>
                         </tr>
                         {% endfor %}
                     </tbody>
